@@ -1,0 +1,129 @@
+{# project/templates/csm/pages/catalog.html #}
+{% extends "csm/base.html" %}
+
+{% block title %}
+{% if active_category %}
+{{ active_category.name }} | Catalog
+{% else %}
+Catalog
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if active_category %}
+{{ active_category.name }} – talianska móda, autentické produkty, rýchle doručenie.
+{% else %}
+Objavte taliansku módu – oblečenie a obuv priamo z Talianska.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="mt-8">
+  <div class="flex flex-col gap-8 lg:flex-row">
+
+    {# ===== SIDEBAR: CATEGORIES ===== #}
+    <aside class="w-full lg:w-64">
+      <div class="rounded-2xl border border-zinc-200 bg-white p-4">
+        <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-700">
+          Categories
+        </h2>
+
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a
+              href="{% url 'catalog:list' %}"
+              class="block rounded-lg px-3 py-2 transition
+              {% if not active_category %}
+                bg-zinc-900 text-white
+              {% else %}
+                hover:bg-zinc-100
+              {% endif %}
+              "
+            >
+              All products
+            </a>
+          </li>
+
+          {% for cat in categories %}
+            <li>
+              <a
+                href="{% url 'catalog:category' cat.slug %}"
+                class="block rounded-lg px-3 py-2 transition
+                {% if active_category and active_category.id == cat.id %}
+                  bg-zinc-900 text-white
+                {% else %}
+                  hover:bg-zinc-100
+                {% endif %}
+                "
+              >
+                {{ cat.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </aside>
+
+    {# ===== MAIN CONTENT ===== #}
+    <div class="flex-1">
+
+      {# HEADER + SORT #}
+      <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold">
+            {% if active_category %}
+              {{ active_category.name }}
+            {% else %}
+              Catalog
+            {% endif %}
+          </h1>
+          <p class="mt-1 text-sm text-zinc-600">
+            {{ products_count }} products
+          </p>
+        </div>
+
+        <form method="get" class="flex items-center gap-2">
+          {% for k, v in request.GET.items %}
+            {% if k != "sort" %}
+              <input type="hidden" name="{{ k }}" value="{{ v }}">
+            {% endif %}
+          {% endfor %}
+
+          <select
+            name="sort"
+            class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
+            onchange="this.form.submit()"
+          >
+            <option value="new" {% if sort == "new" %}selected{% endif %}>New</option>
+            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>
+              Price ↑
+            </option>
+            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>
+              Price ↓
+            </option>
+          </select>
+        </form>
+      </div>
+
+      {# PRODUCTS GRID #}
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {% for product in page_obj.object_list %}
+          {% include "csm/components/product_card.html" with product=product %}
+        {% empty %}
+          <div class="col-span-full rounded-2xl border border-zinc-200 p-10 text-center text-sm text-zinc-600">
+            No products found.
+          </div>
+        {% endfor %}
+      </div>
+
+      {# PAGINATION #}
+      {% if page_obj.paginator.num_pages > 1 %}
+        <div class="mt-10">
+          {% include "csm/includes/pagination.html" with page_obj=page_obj %}
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+{% endblock %}

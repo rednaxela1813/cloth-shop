@@ -1,0 +1,19 @@
+{% if breadcrumbs %}
+<nav class="mt-6 text-sm text-zinc-600" aria-label="Breadcrumb">
+  <ol class="flex flex-wrap items-center gap-2">
+    {% for item in breadcrumbs %}
+      <li class="flex items-center gap-2">
+        {% if not forloop.first %}
+          <span class="text-zinc-300">/</span>
+        {% endif %}
+
+        {% if forloop.last %}
+          <span class="font-medium text-zinc-900">{{ item.title }}</span>
+        {% else %}
+          <a href="{{ item.url }}" class="hover:text-zinc-900">{{ item.title }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% endif %}

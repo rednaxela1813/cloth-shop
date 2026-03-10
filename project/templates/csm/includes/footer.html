@@ -1,0 +1,49 @@
+<footer class="mt-16 border-t border-zinc-200">
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
+      <div>
+        <div class="text-sm font-semibold uppercase tracking-wide">Novaglen</div>
+        <p class="mt-3 text-sm text-zinc-600">
+          Italian fashion marketplace: women, men, kids. Curated picks and fast delivery.
+        </p>
+      </div>
+
+      <div>
+        <div class="text-sm font-semibold">Shop</div>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-600">
+          <li><a class="hover:text-zinc-900" href="">Women</a></li>
+          <li><a class="hover:text-zinc-900" href="">Men</a></li>
+          <li><a class="hover:text-zinc-900" href="">Kids</a></li>
+          <li><a class="hover:text-zinc-900" href="">Sale</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-sm font-semibold">Help</div>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-600">
+          <li><a class="hover:text-zinc-900" href="{% url 'pages:help' %}">Customer care</a></li>
+          {% comment %} <li><a class="hover:text-zinc-900" href="{% url 'pages:shipping' %}">Shipping</a></li> {% endcomment %}
+          <li><a class="hover:text-zinc-900" href="{% url 'pages:returns' %}">Returns</a></li>
+          <li><a class="hover:text-zinc-900" href="{% url 'pages:contact' %}">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-sm font-semibold">Legal</div>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-600">
+          {% comment %} <li><a class="hover:text-zinc-900" href="{% url 'pages:privacy' %}">Privacy policy</a></li>
+          <li><a class="hover:text-zinc-900" href="{% url 'pages:terms' %}">Terms</a></li>
+          <li><a class="hover:text-zinc-900" href="{% url 'pages:cookies' %}">Cookies</a></li> {% endcomment %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-12 flex flex-col gap-3 border-t border-zinc-200 pt-6 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+      <div>© {% now "Y" %} Deilmann s.r.o. All rights reserved.</div>
+      <div class="flex gap-4">
+        <span>SK/EU ready</span>
+        <span>Secure checkout</span>
+      </div>
+    </div>
+  </div>
+</footer>

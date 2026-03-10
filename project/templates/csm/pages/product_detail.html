@@ -1,0 +1,333 @@
+{# csm/components/product_card.html #}
+{% extends "csm/base.html" %}
+
+{% block canonical_url %}{{ absolute_url }}{% endblock %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block meta_description %}
+{{ product.brand|default:"Designer" }} – {{ product.name }}. Cena €{{ product.price }}. Autentický produkt, rýchle doručenie.
+{% endblock %}
+
+{% block og_title %}{{ product.name }}{% endblock %}
+{% block og_description %}
+{{ product.brand|default:"Designer" }} – €{{ product.price }}. Authentic luxury deal, direct from Italy.
+{% endblock %}
+
+{% block og_image %}
+{% if og_image_url %}{{ og_image_url }}{% else %}{{ block.super }}{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ product.brand|default:'Designer'|escapejs }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "EUR",
+    "price": "{{ product.price }}",
+    "availability": "https://schema.org/{% if product.is_active %}InStock{% else %}OutOfStock{% endif %}",
+    "url": "{{ absolute_url }}"
+
+  }{% if og_image_url %},
+  "image": ["{{ og_image_url|escapejs }}"]{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="mt-8">
+  <div class="grid gap-10 lg:grid-cols-2">
+    <div>
+      <div class="overflow-hidden rounded-3xl border border-zinc-200 bg-white">
+        {% with cover=primary_image %}
+          {% if cover %}
+            {% if cover.image_original %}
+              <img
+                src="{{ cover.image_original.url }}"
+                alt="{{ cover.alt|default:product.name }}"
+                class="h-full w-full object-cover"
+              >
+            {% elif cover.image_card %}
+              <img
+                src="{{ cover.image_card.url }}"
+                alt="{{ cover.alt|default:product.name }}"
+                class="h-full w-full object-cover"
+              >
+            {% elif cover.image_url %}
+              <img
+                src="{{ cover.image_url }}"
+                alt="{{ cover.alt|default:product.name }}"
+                class="h-full w-full object-cover"
+              >
+            {% else %}
+              <div class="grid h-[520px] place-items-center text-sm text-zinc-500">No image</div>
+            {% endif %}
+          {% else %}
+            <div class="grid h-[520px] place-items-center text-sm text-zinc-500">No image</div>
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      {% if images %}
+        <div class="mt-4 grid grid-cols-4 gap-3">
+          {% for img in images %}
+            {% if not primary_image or img.id != primary_image.id %}
+              <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                {% if img.image_thumb %}
+                  <img src="{{ img.image_thumb.url }}" alt="{{ img.alt|default:product.name }}" class="h-full w-full object-cover">
+                {% elif img.image_card %}
+                  <img src="{{ img.image_card.url }}" alt="{{ img.alt|default:product.name }}" class="h-full w-full object-cover">
+                {% elif img.image_original %}
+                  <img src="{{ img.image_original.url }}" alt="{{ img.alt|default:product.name }}" class="h-full w-full object-cover">
+                {% elif img.image_url %}
+                  <img src="{{ img.image_url }}" alt="{{ img.alt|default:product.name }}" class="h-full w-full object-cover">
+                {% else %}
+                  <div class="grid h-24 place-items-center text-xs text-zinc-500">No image</div>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        {{ product.brand|default:"Designer" }}
+      </p>
+      <h1 class="mt-2 text-3xl font-semibold text-zinc-900">{{ product.name }}</h1>
+
+      <div class="mt-4 flex items-baseline gap-3">
+        <span id="variant-price" class="text-2xl font-semibold text-zinc-900">
+          {% if selected_variant %}€{{ selected_variant.price }}{% else %}€{{ product.price }}{% endif %}
+        </span>
+        <span id="variant-compare" class="text-sm text-zinc-500 line-through {% if not selected_variant or not selected_variant.compare_at %}hidden{% endif %}">
+          {% if selected_variant and selected_variant.compare_at %}€{{ selected_variant.compare_at }}{% endif %}
+        </span>
+        <span id="variant-sale-badge" class="rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 {% if not selected_variant or not selected_variant.compare_at %}hidden{% endif %}">Sale</span>
+      </div>
+
+      {% if active_variants and selected_variant %}
+        <div class="mt-4 grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4">
+          <div class="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label for="variant-color" class="block text-xs font-medium uppercase tracking-wide text-zinc-500">Farba</label>
+              <select id="variant-color" class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm">
+                {% for variant in active_variants %}
+                  <option value="{{ variant.color }}" {% if variant.color == selected_variant.color %}selected{% endif %}>
+                    {{ variant.color }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="variant-size" class="block text-xs font-medium uppercase tracking-wide text-zinc-500">Velkost</label>
+              <select id="variant-size" class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm">
+                {% for variant in active_variants %}
+                  <option value="{{ variant.size }}" {% if variant.size == selected_variant.size and variant.color == selected_variant.color %}selected{% endif %}>
+                    {{ variant.size }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div id="variant-stock" class="text-sm {% if selected_variant.stock > 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+            {% if selected_variant.stock > 0 %}
+              Skladom: {{ selected_variant.stock }} ks
+            {% else %}
+              Vypredane
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <p class="mt-6 text-sm leading-6 text-zinc-600">
+        Autentický kúsok z Talianska, vybratý pre každý deň aj špeciálne príležitosti.
+        Prémiové spracovanie, moderný strih a pohodlie, ktoré cítiť hneď.
+      </p>
+
+      <div class="mt-6 grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700">
+        <div class="flex items-center justify-between">
+          <span>Doručenie</span>
+          <span class="font-medium">24–48 h</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Vrátenie</span>
+          <span class="font-medium">30 dní bez rizika</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Pôvod</span>
+          <span class="font-medium">Italy</span>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        {% if selected_variant %}
+          <form id="variant-cart-form" method="post" action="{% url 'cart:add_by_variant' %}">
+            {% csrf_token %}
+            <input id="variant-public-id" type="hidden" name="variant_public_id" value="{{ selected_variant.public_id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button id="variant-add-btn" type="submit" class="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white {% if selected_variant.stock <= 0 %}cursor-not-allowed bg-zinc-300{% endif %}" {% if selected_variant.stock <= 0 %}disabled{% endif %}>
+              Add to cart
+            </button>
+          </form>
+        {% else %}
+          <button disabled class="rounded-xl bg-zinc-300 px-5 py-3 text-sm font-semibold text-white cursor-not-allowed">
+            Nedostupne
+          </button>
+        {% endif %}
+        <button class="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-900">
+          Add to wishlist
+        </button>
+      </div>
+
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-700">Details</h2>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-600">
+          <li>Premium materials and craftsmanship</li>
+          <li>Designed to elevate daily looks</li>
+          <li>Pairs well with classic outerwear and sneakers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {% if related_products %}
+    <div class="mt-16">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold">You may also like</h2>
+          <p class="mt-1 text-sm text-zinc-600">More from {{ product.brand|default:"this brand" }}.</p>
+        </div>
+        <a href="{% url 'products:list' %}" class="text-sm font-medium text-zinc-900 hover:underline">
+          View all
+        </a>
+      </div>
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {% for product in related_products %}
+          {% include "csm/components/product_card.html" with product=product %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  {% if variant_payload %}
+    {{ variant_payload|json_script:"variant-data" }}
+    <script>
+      (function () {
+        const variants = JSON.parse(document.getElementById("variant-data").textContent);
+        const colorSelect = document.getElementById("variant-color");
+        const sizeSelect = document.getElementById("variant-size");
+        const priceNode = document.getElementById("variant-price");
+        const compareNode = document.getElementById("variant-compare");
+        const saleBadgeNode = document.getElementById("variant-sale-badge");
+        const stockNode = document.getElementById("variant-stock");
+        const addBtn = document.getElementById("variant-add-btn");
+        const form = document.getElementById("variant-cart-form");
+        const variantIdInput = document.getElementById("variant-public-id");
+
+        if (!colorSelect || !sizeSelect || !priceNode || !stockNode || !addBtn || !form || !variantIdInput) {
+          return;
+        }
+
+        const uniqueColors = [...new Set(variants.map(v => v.color))];
+
+        function sizesForColor(color) {
+          return variants.filter(v => v.color === color).map(v => v.size);
+        }
+
+        function findVariant(color, size) {
+          return variants.find(v => v.color === color && v.size === size) || null;
+        }
+
+        function renderVariant(variant) {
+          if (!variant) {
+            addBtn.disabled = true;
+            addBtn.classList.add("bg-zinc-300", "cursor-not-allowed");
+            addBtn.classList.remove("bg-zinc-900");
+            stockNode.textContent = "Nedostupna kombinacia";
+            stockNode.classList.add("text-red-600");
+            stockNode.classList.remove("text-emerald-700");
+            return;
+          }
+
+          variantIdInput.value = variant.public_id;
+          priceNode.textContent = "€" + variant.price;
+
+          if (variant.compare_at) {
+            compareNode.textContent = "€" + variant.compare_at;
+            compareNode.classList.remove("hidden");
+            saleBadgeNode.classList.remove("hidden");
+          } else {
+            compareNode.classList.add("hidden");
+            saleBadgeNode.classList.add("hidden");
+          }
+
+          if (variant.stock > 0) {
+            addBtn.disabled = false;
+            addBtn.classList.remove("bg-zinc-300", "cursor-not-allowed");
+            addBtn.classList.add("bg-zinc-900");
+            stockNode.textContent = "Skladom: " + variant.stock + " ks";
+            stockNode.classList.remove("text-red-600");
+            stockNode.classList.add("text-emerald-700");
+          } else {
+            addBtn.disabled = true;
+            addBtn.classList.add("bg-zinc-300", "cursor-not-allowed");
+            addBtn.classList.remove("bg-zinc-900");
+            stockNode.textContent = "Vypredane";
+            stockNode.classList.add("text-red-600");
+            stockNode.classList.remove("text-emerald-700");
+          }
+        }
+
+        function syncSizes() {
+          const selectedColor = colorSelect.value;
+          const allowedSizes = sizesForColor(selectedColor);
+          const currentSize = sizeSelect.value;
+          sizeSelect.innerHTML = "";
+          allowedSizes.forEach(size => {
+            const option = document.createElement("option");
+            option.value = size;
+            option.textContent = size;
+            sizeSelect.appendChild(option);
+          });
+          if (allowedSizes.includes(currentSize)) {
+            sizeSelect.value = currentSize;
+          }
+        }
+
+        colorSelect.innerHTML = "";
+        uniqueColors.forEach(color => {
+          const option = document.createElement("option");
+          option.value = color;
+          option.textContent = color;
+          colorSelect.appendChild(option);
+        });
+
+        colorSelect.addEventListener("change", function () {
+          syncSizes();
+          renderVariant(findVariant(colorSelect.value, sizeSelect.value));
+        });
+        sizeSelect.addEventListener("change", function () {
+          renderVariant(findVariant(colorSelect.value, sizeSelect.value));
+        });
+
+        syncSizes();
+        renderVariant(findVariant(colorSelect.value, sizeSelect.value));
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

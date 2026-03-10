@@ -1,0 +1,41 @@
+{# templates/includes/pagination.html #}
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-8 flex items-center justify-center gap-2 text-sm" aria-label="Pagination">
+
+    {# Prev #}
+    {% if page_obj.has_previous %}
+      <a
+        href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+        class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
+        aria-label="Previous page"
+      >
+        ← Prev
+      </a>
+    {% else %}
+      <span class="rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-zinc-400">
+        ← Prev
+      </span>
+    {% endif %}
+
+    {# Current #}
+    <span class="px-3 py-2 text-zinc-600">
+      Page <span class="font-medium text-zinc-900">{{ page_obj.number }}</span>
+      of <span class="font-medium text-zinc-900">{{ page_obj.paginator.num_pages }}</span>
+    </span>
+
+    {# Next #}
+    {% if page_obj.has_next %}
+      <a
+        href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+        class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
+        aria-label="Next page"
+      >
+        Next →
+      </a>
+    {% else %}
+      <span class="rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-zinc-400">
+        Next →
+      </span>
+    {% endif %}
+  </nav>
+{% endif %}

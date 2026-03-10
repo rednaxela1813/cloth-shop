@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: ./project
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.prod
+    env_file:
+      - ./project/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - ./project/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

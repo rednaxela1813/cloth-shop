@@ -1,0 +1,52 @@
+{# project/templates/csm/pages/product_list.html #}
+{% extends "csm/base.html" %}
+{% block title %}Catalog{% endblock %}
+
+
+
+{% block content %}
+<section class="mt-8">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold">{{ heading|default:"Catalog" }}</h1>
+      <p class="mt-1 text-sm text-zinc-600">{{ subtitle|default:"Objavujte nové kúsky." }}</p>
+    </div>
+    <form method="get" class="flex items-center gap-2">
+      {% for k,v in request.GET.items %}
+        {% if k != "sort" %}
+          <input type="hidden" name="{{ k }}" value="{{ v }}">
+        {% endif %}
+      {% endfor %}
+      <select name="sort" class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm">
+        <option value="">Sort</option>
+        <option value="new" {% if request.GET.sort == "new" %}selected{% endif %}>New</option>
+        <option value="price_asc" {% if request.GET.sort == "price_asc" %}selected{% endif %}>Price ↑</option>
+        <option value="price_desc" {% if request.GET.sort == "price_desc" %}selected{% endif %}>Price ↓</option>
+      </select>
+      <button class="rounded-xl bg-zinc-900 px-3 py-2 text-sm text-white">Apply</button>
+    </form>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
+    <aside class="lg:col-span-3">
+    {% include "csm/components/filters_sidebar.html" %}
+  </aside>
+
+    <div class="lg:col-span-9">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
+        {% for product in page_obj.object_list %}
+          {% include "csm/components/product_card.html" with product=product %}
+        {% empty %}
+          <div class="col-span-full rounded-2xl border border-zinc-200 p-10 text-center text-sm text-zinc-600">
+            Nič sme nenašli. Skúste zmeniť filtre.
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-10">
+        {% include "csm/includes/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

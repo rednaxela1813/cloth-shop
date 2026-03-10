@@ -1,0 +1,67 @@
+{# project/templates/csm/base.html #}
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="sk" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block title %}Italian Luxury Clothing{% endblock %}</title>
+
+  <meta name="description" content="{% block meta_description %}Nakupujte taliansku módu online – autentické kúsky, rýchle doručenie.{% endblock %}">
+
+  <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+  {% tailwind_css %}
+
+  <!-- OpenGraph -->
+  <meta property="og:title" content="{% block og_title %}Italian Luxury Clothing{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Authentic luxury deals, direct from Italy.{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="{% block og_image %}{% static 'csm/img/logo.png' %}{% endblock %}">
+
+  <!-- Tailwind build output (django-tailwind / your pipeline) -->
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+
+  {% block extra_head %}{% endblock %}
+
+  {# ✅ Structured data (JSON-LD) - по умолчанию добавляем BreadcrumbList если есть breadcrumbs #}
+  {% block structured_data %}
+    {% if breadcrumbs %}
+      {% include "csm/includes/breadcrumbs_jsonld.html" %}
+    {% endif %}
+  {% endblock %}
+</head>
+
+<body class="min-h-full bg-white text-zinc-900 antialiased">
+
+  {% include "csm/includes/promo_bar.html" %}
+  {% include "csm/includes/navbar.html" %}
+
+  {% block toast %}
+    {% comment %} {% include "csm/components/toast.html" %} {% endcomment %}
+  {% endblock %}
+
+  <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {% if messages %}
+      <div class="mt-4 space-y-2">
+        {% for message in messages %}
+          <div class="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block breadcrumbs %}
+      {% include "csm/includes/breadcrumbs.html" %}
+    {% endblock %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "csm/includes/footer.html" %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

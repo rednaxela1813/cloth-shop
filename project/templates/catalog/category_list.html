@@ -1,0 +1,6 @@
+<h1>Catalog</h1>
+<ul>
+  {% for c in categories %}
+    <li><a href="{% url 'catalog:category' slug=c.slug %}">{{ c.name }}</a></li>
+  {% endfor %}
+</ul>

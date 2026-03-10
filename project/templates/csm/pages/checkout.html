@@ -1,0 +1,107 @@
+{% extends "csm/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-10">
+  <h1 class="text-3xl font-semibold mb-6">Checkout</h1>
+
+  {% if items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+          {% if form.errors %}
+            <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Please исправьте ошибки в форме.
+            </div>
+          {% endif %}
+          <div>
+            <label class="block text-sm font-medium">Full name</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.full_name.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.email.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Phone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.phone.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Country (2-letter)</label>
+            {{ form.country }}
+            {% if form.country.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.country.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Region</label>
+            {{ form.region }}
+            {% if form.region.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.region.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">City</label>
+            {{ form.city }}
+            {% if form.city.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.city.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Postal code</label>
+            {{ form.postal_code }}
+            {% if form.postal_code.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.postal_code.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Address line 1</label>
+            {{ form.address_line1 }}
+            {% if form.address_line1.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.address_line1.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Address line 2</label>
+            {{ form.address_line2 }}
+            {% if form.address_line2.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.address_line2.errors|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="mt-4 inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
+            Place order
+          </button>
+        </form>
+      </div>
+
+      <div class="border rounded-xl p-4">
+        <h2 class="text-lg font-semibold mb-4">Order summary</h2>
+        <div class="space-y-2">
+          {% for item in items %}
+            <div class="flex justify-between text-sm">
+              <span>{{ item.variant.product.name }} ({{ item.variant.color }}/{{ item.variant.size }}) × {{ item.quantity }}</span>
+              <span>€{{ item.subtotal }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="mt-4 flex justify-between font-semibold">
+          <span>Subtotal</span>
+          <span>€{{ cart.subtotal }}</span>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p>Your cart is empty.</p>
+  {% endif %}
+</div>
+{% endblock %}

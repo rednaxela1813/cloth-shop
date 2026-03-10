@@ -1,0 +1,130 @@
+# apps/orders/tests.py
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from apps.cart.models import Cart, CartItem
+from apps.products.models import Product, ProductVariant
+from .models import Address, Order, OrderItem, Payment
+from .services import create_order_from_cart
+
+
+class OrderModelsTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="buyer@example.com",
+            password="pass12345",
+        )
+        self.product = Product.objects.create(name="Test Product", price="25.00")
+        self.variant = ProductVariant.objects.create(
+            product=self.product,
+            size="M",
+            color="Black",
+            sku="ORDER-BLK-M",
+            price="25.00",
+            stock=10,
+        )
+        self.address = Address.objects.create(
+            user=self.user,
+            full_name="John Doe",
+            email="buyer@example.com",
+            phone="+421000000000",
+            country="SK",
+            city="Bratislava",
+            address_line1="Main 1",
+        )
+
+    def test_create_order_with_item(self):
+        order = Order.objects.create(
+            user=self.user,
+            email="buyer@example.com",
+            shipping_address=self.address,
+            subtotal=Decimal("25.00"),
+            shipping_cost=Decimal("5.00"),
+            total=Decimal("30.00"),
+        )
+        item = OrderItem.objects.create(
+            order=order,
+            variant=self.variant,
+            quantity=1,
+            product_name=self.product.name,
+            sku=self.variant.sku,
+            size=self.variant.size,
+            color=self.variant.color,
+            unit_price=Decimal("25.00"),
+            line_total=Decimal("25.00"),
+        )
+
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertEqual(item.subtotal, Decimal("25.00"))
+
+    def test_create_payment(self):
+        order = Order.objects.create(
+            user=self.user,
+            email="buyer@example.com",
+            shipping_address=self.address,
+            subtotal=Decimal("25.00"),
+            shipping_cost=Decimal("0.00"),
+            total=Decimal("25.00"),
+        )
+        payment = Payment.objects.create(
+            order=order,
+            amount=Decimal("25.00"),
+            currency="EUR",
+        )
+        self.assertEqual(payment.provider, Payment.Provider.STRIPE)
+        self.assertEqual(payment.status, Payment.Status.CREATED)
+
+    def test_create_order_from_cart_decrements_stock(self):
+        cart = Cart.objects.create(user=self.user, is_active=True)
+        CartItem.objects.create(cart=cart, variant=self.variant, quantity=2)
+        data = {
+            "full_name": "John Doe",
+            "email": "buyer@example.com",
+            "phone": "",
+            "country": "SK",
+            "region": "",
+            "city": "Bratislava",
+            "postal_code": "",
+            "address_line1": "Main 1",
+            "address_line2": "",
+        }
+
+        class DummyRequest:
+            pass
+
+        request = DummyRequest()
+        request.user = self.user
+
+        order = create_order_from_cart(request, cart, data)
+
+        self.variant.refresh_from_db()
+        self.assertEqual(order.items.count(), 1)
+        self.assertEqual(self.variant.stock, 8)
+
+    def test_create_order_from_cart_raises_on_insufficient_stock(self):
+        self.variant.stock = 1
+        self.variant.save(update_fields=["stock", "updated"])
+        cart = Cart.objects.create(user=self.user, is_active=True)
+        CartItem.objects.create(cart=cart, variant=self.variant, quantity=2)
+        data = {
+            "full_name": "John Doe",
+            "email": "buyer@example.com",
+            "phone": "",
+            "country": "SK",
+            "region": "",
+            "city": "Bratislava",
+            "postal_code": "",
+            "address_line1": "Main 1",
+            "address_line2": "",
+        }
+
+        class DummyRequest:
+            pass
+
+        request = DummyRequest()
+        request.user = self.user
+
+        with self.assertRaises(ValueError):
+            create_order_from_cart(request, cart, data)

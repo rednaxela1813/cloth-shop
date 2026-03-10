@@ -1,0 +1,38 @@
+services:
+  web:
+    build:
+      context: ./project
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.dev
+    env_file:
+      - ./project/.env
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./project:/app
+      - ./project/media:/app/media
+    depends_on:
+      - db
+
+    
+
+  tailwind:
+    build: 
+      context: ./project
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.dev
+    command: python manage.py tailwind start
+    volumes:
+      - ./project:/app
+    depends_on:
+      - web
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - ./project/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

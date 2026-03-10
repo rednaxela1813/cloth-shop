@@ -1,0 +1,31 @@
+{% extends "csm/base.html" %}
+{% block title %}Italian Luxury Clothing{% endblock %}
+
+{% block content %}
+  {% include "csm/components/hero.html" %}
+  {% include "csm/components/trust_strip.html" %}
+  {% include "csm/components/category_tiles.html" %}
+
+  <section class="mt-12">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold">Trending now</h2>
+        <p class="mt-1 text-sm text-zinc-600">Nové kúsky a najpopulárnejšie značky.</p>
+      </div>
+      <a href="{% url 'products:list' %}" class="text-sm underline underline-offset-4 hover:text-zinc-600">
+  Zobraziť všetko
+</a>
+
+    </div>
+
+    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {% for product in trending_products %}
+        {% include "csm/components/product_card.html" with product=product %}
+      {% empty %}
+        <div class="col-span-full rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-600">
+          Zatiaľ tu nie sú žiadne produkty.
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

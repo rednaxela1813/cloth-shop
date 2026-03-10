@@ -1,0 +1,14 @@
+{% extends "csm/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-10">
+  <h1 class="text-3xl font-semibold mb-4">Stav platby</h1>
+  <p class="text-sm text-gray-600">Status: {{ status }}</p>
+  {% if status == "error_config" %}
+    <p class="mt-2 text-sm text-red-600">Stripe nie je nakonfigurovany. Skontrolujte STRIPE_SECRET_KEY a STRIPE_WEBHOOK_SECRET.</p>
+  {% endif %}
+  <p class="mt-4">
+    <a href="{% url 'home' %}" class="text-sm underline">Spat na hlavnu stranku</a>
+  </p>
+</div>
+{% endblock %}
