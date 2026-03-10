@@ -5,7 +5,7 @@
     {# Prev #}
     {% if page_obj.has_previous %}
       <a
-        href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+        href="?page={{ page_obj.previous_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}"
         class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
         aria-label="Previous page"
       >
@@ -26,7 +26,7 @@
     {# Next #}
     {% if page_obj.has_next %}
       <a
-        href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+        href="?page={{ page_obj.next_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}"
         class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
         aria-label="Next page"
       >

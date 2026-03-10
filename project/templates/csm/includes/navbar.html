@@ -20,7 +20,7 @@
 
       <!-- Search -->
       <div class="flex-1">
-        <form method="get" action="" class="w-full">
+        <form method="get" action="{% url 'products:list' %}" class="w-full">
           <label class="sr-only" for="q">Search</label>
           <div class="relative">
             <input id="q" name="q" value="{{ request.GET.q|default:'' }}"

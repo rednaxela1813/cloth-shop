@@ -10,12 +10,14 @@ SESSION_CART_ID = "cart_id"
 
 
 def _ensure_session_key(request) -> str:
+    """Guarantee that anonymous requests have a persisted session key."""
     if not request.session.session_key:
         request.session.save()
     return request.session.session_key
 
 
 def get_or_create_cart(request) -> Cart:
+    """Return active cart for current actor (user or anonymous session)."""
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user, is_active=True)
         return cart
@@ -28,6 +30,7 @@ def get_or_create_cart(request) -> Cart:
 
 
 def _validate_variant_for_quantity(variant, quantity: int) -> None:
+    """Centralized cart validation for availability and stock limits."""
     if not variant.is_active or not variant.product.is_active:
         raise ValueError("Variant is not available")
     if quantity <= 0:
@@ -54,6 +57,7 @@ def add_item(cart: Cart, variant, quantity: int = 1) -> CartItem:
 
 
 def set_item_quantity(cart: Cart, variant, quantity: int) -> None:
+    """Set exact quantity for an item; delete row when quantity is zero."""
     item = CartItem.objects.filter(cart=cart, variant=variant).first()
     if not item:
         return
@@ -84,11 +88,13 @@ def merge_session_cart_to_user(user, session) -> None:
         user_cart, _ = Cart.objects.get_or_create(user=user, is_active=True)
 
         if user_cart.id == session_cart.id:
+            # Cart already belongs to this user, just bind ownership explicitly.
             session_cart.user = user
             session_cart.save(update_fields=["user", "updated"])
             return
 
         for item in session_cart.items.select_related("variant", "variant__product"):
+            # Skip unavailable variants instead of failing whole merge.
             if not item.variant.is_active or not item.variant.product.is_active or item.variant.stock <= 0:
                 continue
             target = CartItem.objects.filter(cart=user_cart, variant=item.variant).first()

@@ -64,6 +64,32 @@ class Product(models.Model):
             return primary
         return self.images.order_by("sort_order", "id").first()
 
+    def _pricing_variants(self):
+        # Use prefetched variants when available to avoid N+1 on listing pages.
+        prefetched = getattr(self, "_prefetched_active_variants_for_pricing", None)
+        if prefetched is not None:
+            return prefetched
+        return list(self.variants.filter(is_active=True).order_by("price", "id"))
+
+    @property
+    def lowest_priced_variant(self):
+        variants = self._pricing_variants()
+        return variants[0] if variants else None
+
+    @property
+    def display_price(self):
+        lowest = self.lowest_priced_variant
+        if lowest:
+            return lowest.price
+        return self.price
+
+    @property
+    def display_compare_at(self):
+        lowest = self.lowest_priced_variant
+        if lowest:
+            return lowest.compare_at
+        return self.compare_at
+
     @property
     def default_variant(self):
         return self.variants.filter(is_active=True).order_by("-stock", "id").first()

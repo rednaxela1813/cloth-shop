@@ -2,84 +2,144 @@
   <div class="flex items-end justify-between gap-4">
     <div>
       <h2 class="text-xl font-semibold">Shop by category</h2>
-      <p class="mt-1 text-sm text-zinc-600">Dámska, pánska a detská móda – vyberte si smer.</p>
+      <p class="mt-1 text-sm text-zinc-600">
+        Dámska, pánska a detská móda – vyberte si smer.
+      </p>
     </div>
-    <a href="{% url 'catalog:list' %}" class="text-sm underline underline-offset-4 hover:text-zinc-600">Zobraziť všetko</a>
+    <a
+      href="{% url 'catalog:list' %}"
+      class="text-sm underline underline-offset-4 hover:text-zinc-600"
+      >Zobraziť všetko</a
+    >
   </div>
 
   <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    <!-- Women -->
-    <a href="{% url 'catalog:category' slug='women' %}" class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white">
-      <div class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40"></div>
+    <a
+      href="{% url 'catalog:category' slug='women' %}"
+      class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/10"
+      ></div>
       <div class="relative p-8 pl-8">
-        <p class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-900">
+        <p
+          class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-900 shadow-sm"
+        >
           Women
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
           New arrivals
         </p>
         <h3 class="mt-4 text-lg font-semibold text-zinc-900">Dámska móda</h3>
-        <p class="mt-1 text-sm text-zinc-600">Šaty, kabáty, topánky, kabelky.</p>
+        <p class="mt-1 text-sm text-zinc-600">
+          Šaty, kabáty, topánky, kabelky.
+        </p>
 
-        <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900">
+        <div
+          class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900"
+        >
           Shop Women
-          <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          <span class="transition-transform group-hover:translate-x-0.5"
+            >→</span
+          >
         </div>
       </div>
 
-      <div class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"></div>
+      <div
+        class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"
+      ></div>
     </a>
 
-    <!-- Men -->
-    <a href="{% url 'catalog:category' slug='men' %}" class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-yellow-200">
-      <div class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40"></div>
+    <a
+      href="{% url 'catalog:category' slug='men' %}"
+      class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-yellow-200"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40"
+      ></div>
       <div class="relative p-8 pl-8">
-        <p class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-900">
+        <p
+          class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-900 shadow-sm"
+        >
           Men
           <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
           Essentials
         </p>
         <h3 class="mt-4 text-lg font-semibold text-zinc-900">Pánska móda</h3>
-        <p class="mt-1 text-sm text-zinc-600">Bundy, saká, sneakers, doplnky.</p>
+        <p class="mt-1 text-sm text-zinc-600">
+          Bundy, saká, sneakers, doplnки.
+        </p>
 
-        <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900">
+        <div
+          class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900"
+        >
           Shop Men
-          <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          <span class="transition-transform group-hover:translate-x-0.5"
+            >→</span
+          >
         </div>
       </div>
 
-      <div class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"></div>
+      <div
+        class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"
+      ></div>
     </a>
 
-    <!-- Sale -->
-    <a href="{% url 'catalog:category' slug='sale' %}" class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-900">
-      <div class="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-black/30"></div>
+    <a
+      href="{% url 'catalog:category' slug='sale' %}"
+      class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-900"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-black/30"
+      ></div>
       <div class="relative p-8 pl-8 text-white">
-        <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-  Sale
-  <span class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-
-  Limited time
-</p>
+        <p
+          class="inline-flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white"
+        >
+          Sale
+          <span
+            class="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"
+          ></span>
+          Limited time
+        </p>
 
         <h3 class="mt-4 text-lg font-semibold">Zľavy do -60%</h3>
         <p class="mt-1 text-sm text-white/70">Vybrané kúsky za férové ceny.</p>
 
         <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold">
           Sale picks
-          <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          <span class="transition-transform group-hover:translate-x-0.5"
+            >→</span
+          >
         </div>
       </div>
 
-      <div class="h-40 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.0)_55%)]"></div>
+      <div
+        class="h-40 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.0)_55%)]"
+      ></div>
     </a>
   </div>
 
   <!-- Small chips row -->
   <div class="mt-6 flex flex-wrap gap-2">
-    <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900">New-in</span>
-    <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900">Designer brands</span>
-    <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900">Shoes</span>
-    <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900">Bags</span>
-    <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900">Accessories</span>
+    <span
+      class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900"
+      >New-in</span
+    >
+    <span
+      class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900"
+      >Designer brands</span
+    >
+    <span
+      class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900"
+      >Shoes</span
+    >
+    <span
+      class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900"
+      >Bags</span
+    >
+    <span
+      class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-900"
+      >Accessories</span
+    >
   </div>
 </section>

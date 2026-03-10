@@ -6,12 +6,12 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block meta_description %}
-{{ product.brand|default:"Designer" }} – {{ product.name }}. Cena €{{ product.price }}. Autentický produkt, rýchle doručenie.
+{{ product.brand|default:"Designer" }} – {{ product.name }}. Cena €{% if selected_variant %}{{ selected_variant.price }}{% else %}{{ product.display_price }}{% endif %}. Autentický produkt, rýchle doručenie.
 {% endblock %}
 
 {% block og_title %}{{ product.name }}{% endblock %}
 {% block og_description %}
-{{ product.brand|default:"Designer" }} – €{{ product.price }}. Authentic luxury deal, direct from Italy.
+{{ product.brand|default:"Designer" }} – €{% if selected_variant %}{{ selected_variant.price }}{% else %}{{ product.display_price }}{% endif %}. Authentic luxury deal, direct from Italy.
 {% endblock %}
 
 {% block og_image %}
@@ -32,7 +32,7 @@
   "offers": {
     "@type": "Offer",
     "priceCurrency": "EUR",
-    "price": "{{ product.price }}",
+    "price": "{% if selected_variant %}{{ selected_variant.price }}{% else %}{{ product.display_price }}{% endif %}",
     "availability": "https://schema.org/{% if product.is_active %}InStock{% else %}OutOfStock{% endif %}",
     "url": "{{ absolute_url }}"
 
@@ -107,7 +107,7 @@
 
       <div class="mt-4 flex items-baseline gap-3">
         <span id="variant-price" class="text-2xl font-semibold text-zinc-900">
-          {% if selected_variant %}€{{ selected_variant.price }}{% else %}€{{ product.price }}{% endif %}
+          {% if selected_variant %}€{{ selected_variant.price }}{% else %}€{{ product.display_price }}{% endif %}
         </span>
         <span id="variant-compare" class="text-sm text-zinc-500 line-through {% if not selected_variant or not selected_variant.compare_at %}hidden{% endif %}">
           {% if selected_variant and selected_variant.compare_at %}€{{ selected_variant.compare_at }}{% endif %}

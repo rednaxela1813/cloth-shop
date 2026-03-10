@@ -57,6 +57,9 @@
     <div class="mt-6 flex items-center justify-between">
       <div class="text-lg font-semibold">Subtotal: €{{ cart.subtotal }}</div>
       <div class="flex items-center gap-4">
+        <a href="{% url 'products:list' %}" class="inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
+          Вернуться в магазин
+        </a>
         <a href="{% url 'orders:checkout' %}" class="inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
           Checkout
         </a>

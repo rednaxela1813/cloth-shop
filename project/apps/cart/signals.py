@@ -7,5 +7,6 @@ from .services import merge_session_cart_to_user
 
 @receiver(user_logged_in)
 def merge_cart_on_login(sender, request, user, **kwargs):
+    """Attach anonymous/session cart to user right after successful login."""
     # Keep cart continuity for anonymous users after authentication.
     merge_session_cart_to_user(user, request.session)

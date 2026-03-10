@@ -7,5 +7,6 @@ class CartConfig(AppConfig):
     name = "apps.cart"
 
     def ready(self):
+        # Register login signal handlers once app registry is initialized.
         # Import signal handlers on app ready.
         from . import signals  # noqa: F401

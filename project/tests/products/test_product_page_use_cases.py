@@ -11,9 +11,11 @@ def test_build_product_list_context_filters_active_and_sorts_by_price_asc():
     rf = RequestFactory()
     request = rf.get("/shop/?sort=price_asc&page=1")
 
-    low = Product.objects.create(name="Low", price="10.00", is_active=True)
-    high = Product.objects.create(name="High", price="20.00", is_active=True)
+    low = Product.objects.create(name="Low", price="999.00", is_active=True)
+    high = Product.objects.create(name="High", price="1.00", is_active=True)
     Product.objects.create(name="Inactive", price="1.00", is_active=False)
+    ProductVariant.objects.create(product=low, size="S", color="Black", sku="LOW-S-BLK", price="10.00", stock=2, is_active=True)
+    ProductVariant.objects.create(product=high, size="S", color="Black", sku="HIGH-S-BLK", price="20.00", stock=2, is_active=True)
 
     context = build_product_list_context(request=request, page_size=12)
 

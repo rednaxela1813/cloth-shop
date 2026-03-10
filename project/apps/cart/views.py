@@ -9,6 +9,7 @@ from .services import add_item, get_or_create_cart, set_item_quantity
 
 
 def _read_quantity(request) -> int:
+    """Parse posted quantity safely, falling back to one unit."""
     try:
         return int(request.POST.get("quantity") or 1)
     except (TypeError, ValueError):
@@ -17,6 +18,7 @@ def _read_quantity(request) -> int:
 
 @require_POST
 def cart_add_view(request, public_id):
+    """Add product variant to cart using URL-provided variant id."""
     cart = get_or_create_cart(request)
     variant = get_object_or_404(
         ProductVariant.objects.select_related("product"),
@@ -35,6 +37,7 @@ def cart_add_view(request, public_id):
 
 @require_POST
 def cart_add_by_variant_view(request):
+    """Add product variant to cart using form-provided variant id."""
     variant_public_id = request.POST.get("variant_public_id", "")
     cart = get_or_create_cart(request)
     variant = get_object_or_404(
@@ -54,6 +57,7 @@ def cart_add_by_variant_view(request):
 
 @require_POST
 def cart_set_quantity_view(request, public_id):
+    """Update item quantity for one cart line."""
     cart = get_or_create_cart(request)
     variant = get_object_or_404(
         ProductVariant.objects.select_related("product"),
@@ -72,6 +76,7 @@ def cart_set_quantity_view(request, public_id):
 
 @require_POST
 def cart_remove_view(request, public_id):
+    """Remove item by setting quantity to zero via shared service logic."""
     cart = get_or_create_cart(request)
     variant = get_object_or_404(
         ProductVariant.objects.select_related("product"),
@@ -93,6 +98,7 @@ def cart_clear_view(request):
 
 
 def cart_detail_view(request):
+    """Render cart page with data prefetched for product/variant thumbnails."""
     cart = get_or_create_cart(request)
     items = (
         cart.items.select_related("variant", "variant__product")

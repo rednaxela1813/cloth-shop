@@ -6,6 +6,7 @@ from . import views
 app_name = "cart"
 
 urlpatterns = [
+    # Cart page and cart item actions.
     path("", views.cart_detail_view, name="detail"),
     path("add/<uuid:public_id>/", views.cart_add_view, name="add"),
     path("add/", views.cart_add_by_variant_view, name="add_by_variant"),

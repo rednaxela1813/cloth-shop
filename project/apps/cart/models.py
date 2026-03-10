@@ -8,6 +8,7 @@ from django.db import models
 
 
 class Cart(models.Model):
+    """Shopping cart bound either to authenticated user or anonymous session."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -56,6 +57,7 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
+    """One unique product variant line inside a cart."""
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     variant = models.ForeignKey("products.ProductVariant", on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=1)
@@ -79,4 +81,5 @@ class CartItem(models.Model):
 
     @property
     def subtotal(self) -> Decimal:
+        # Price is stored on variant, so subtotal is dynamic to current variant price.
         return self.variant.price * self.quantity

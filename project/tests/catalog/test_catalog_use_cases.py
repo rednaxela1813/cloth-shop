@@ -3,7 +3,7 @@ from django.http import Http404
 from django.test import RequestFactory
 
 from apps.catalog.use_cases.catalog_pages import build_catalog_category_context, build_catalog_index_context
-from apps.products.models import Category, Product, ProductCategory
+from apps.products.models import Category, Product, ProductCategory, ProductVariant
 
 pytestmark = pytest.mark.django_db
 
@@ -12,9 +12,11 @@ def test_build_catalog_index_context_applies_sort_and_pagination():
     rf = RequestFactory()
     request = rf.get("/catalog/?sort=price_asc&page=1")
 
-    low = Product.objects.create(name="Low", price="10.00", is_active=True)
-    high = Product.objects.create(name="High", price="20.00", is_active=True)
+    low = Product.objects.create(name="Low", price="999.00", is_active=True)
+    high = Product.objects.create(name="High", price="1.00", is_active=True)
     Product.objects.create(name="Hidden", price="1.00", is_active=False)
+    ProductVariant.objects.create(product=low, size="L", color="Black", sku="CAT-LOW-L-BLK", price="10.00", stock=1, is_active=True)
+    ProductVariant.objects.create(product=high, size="L", color="Black", sku="CAT-HIGH-L-BLK", price="20.00", stock=1, is_active=True)
 
     context = build_catalog_index_context(request=request, page_size=12)
 

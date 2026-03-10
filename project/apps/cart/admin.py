@@ -5,6 +5,7 @@ from .models import Cart, CartItem
 
 
 class CartItemInline(admin.TabularInline):
+    # Inline editing keeps cart content visible directly from Cart admin page.
     model = CartItem
     extra = 0
     fields = ("variant", "quantity", "created", "updated")
@@ -21,6 +22,7 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
+    # Useful for quick troubleshooting by product name or SKU.
     list_display = ("cart", "variant", "quantity", "updated")
     search_fields = ("cart__id", "variant__product__name", "variant__sku")
     list_filter = ("variant",)
