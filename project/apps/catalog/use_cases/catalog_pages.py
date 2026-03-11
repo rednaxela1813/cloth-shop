@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_catalog_index, breadcrumbs_for_category
@@ -38,9 +39,22 @@ def build_catalog_index_context(*, request, page_size: int) -> dict:
 
 
 def build_catalog_category_context(*, request, slug: str, page_size: int) -> dict:
-    categories = Category.objects.roots()
+    categories = Category.objects.roots().filter(products__is_active=True).distinct()
     active_category = get_object_or_404(Category, slug=slug, is_active=True)
-    subcategories = active_category.children.filter(is_active=True).order_by("sort_order", "name", "id")
+    if not active_category.products.filter(is_active=True).exists():
+        raise Http404("Category has no active products.")
+
+    subcategories = (
+        active_category.children.filter(is_active=True, products__is_active=True)
+        .distinct()
+        .order_by("sort_order", "name", "id")
+    )
+    selected_root_category = active_category.parent if active_category.parent_id else active_category
+    sidebar_subcategories = (
+        selected_root_category.children.filter(is_active=True, products__is_active=True)
+        .distinct()
+        .order_by("sort_order", "name", "id")
+    )
 
     qs = Product.objects.in_category(active_category).prefetch_related(
         Prefetch(
@@ -61,6 +75,8 @@ def build_catalog_category_context(*, request, slug: str, page_size: int) -> dic
         "active_category": active_category,
         "category": active_category,
         "subcategories": subcategories,
+        "selected_root_category": selected_root_category,
+        "sidebar_subcategories": sidebar_subcategories,
         "page_obj": page_obj,
         "products": page_obj.object_list,
         "products_count": paginator.count,

@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from apps.cart.services import get_or_create_cart
+from apps.orders.models import Order
 from apps.orders.use_cases.checkout import build_checkout_initial, process_checkout_submission
 
 
@@ -25,6 +26,8 @@ def test_build_checkout_initial_for_authenticated_user():
     initial = build_checkout_initial(request)
     assert initial["email"] == "initial@example.com"
     assert initial["full_name"] == "Jane Doe"
+    assert initial["country"] == "SK"
+    assert initial["shipping_method"] == Order.ShippingMethod.DPD_HOME
 
 
 def test_process_checkout_submission_returns_form_error_for_empty_cart(client, django_user_model):

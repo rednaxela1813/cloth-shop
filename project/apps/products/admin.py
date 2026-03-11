@@ -8,6 +8,7 @@ from .models import Category, Product, ProductCategory, ProductImage, ProductVar
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+    can_delete = False
     fields = ("image_url", "image_original", "image_card", "image_thumb", "alt", "sort_order", "is_primary")
     readonly_fields = ()
     ordering = ("sort_order", "id")
@@ -16,6 +17,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductCategoryInline(admin.TabularInline):
     model = ProductCategory
     extra = 1
+    can_delete = False
     fields = ("category", "is_primary", "sort_order")
     ordering = ("sort_order", "id")
 
@@ -23,6 +25,7 @@ class ProductCategoryInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
+    can_delete = False
     fields = ("public_id", "size", "color", "sku", "price", "compare_at", "stock", "is_active")
     readonly_fields = ("public_id",)
     ordering = ("id",)
@@ -31,6 +34,7 @@ class ProductVariantInline(admin.TabularInline):
 class VariantImageInline(admin.TabularInline):
     model = VariantImage
     extra = 1
+    can_delete = False
     fields = ("image_original", "image_card", "image_thumb", "alt", "sort_order", "is_primary")
     ordering = ("sort_order", "id")
 
@@ -119,11 +123,15 @@ class ProductAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         form._save_seo_fields(obj)
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class CategoryProductInline(admin.TabularInline):
     model = ProductCategory
     fk_name = "category"
     extra = 1
+    can_delete = False
     fields = ("product", "is_primary", "sort_order")
     ordering = ("sort_order", "id")
 
@@ -135,6 +143,10 @@ class CategoryAdminForm(SeoMetaFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["parent"].label = "Nadradená kategória (podkategória, voliteľné)"
+        self.fields["parent"].help_text = "Vyberte nadradenú kategóriu, ak ide o podkategóriu."
+        if self.instance and self.instance.pk:
+            self.fields["parent"].queryset = self.fields["parent"].queryset.exclude(pk=self.instance.pk)
         self._add_seo_fields()
         self._init_seo_fields()
 
@@ -156,6 +168,9 @@ class CategoryAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         form._save_seo_fields(obj)
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
@@ -163,12 +178,18 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     list_filter = ("is_primary", "category")
     search_fields = ("product__name", "category__name")
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ("product", "is_primary", "sort_order", "created")
     list_filter = ("is_primary",)
     search_fields = ("product__name", "alt", "image_url")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(ProductVariant)
@@ -178,9 +199,15 @@ class ProductVariantAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "sku")
     inlines = [VariantImageInline]
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(VariantImage)
 class VariantImageAdmin(admin.ModelAdmin):
     list_display = ("variant", "is_primary", "sort_order", "created")
     list_filter = ("is_primary",)
     search_fields = ("variant__sku", "variant__product__name", "alt")
+
+    def has_delete_permission(self, request, obj=None):
+        return False

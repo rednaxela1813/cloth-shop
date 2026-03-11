@@ -43,6 +43,13 @@
             {% endif %}
           </div>
           <div>
+            <label class="block text-sm font-medium">Shipping method</label>
+            {{ form.shipping_method }}
+            {% if form.shipping_method.errors %}
+              <div class="text-xs text-red-600 mt-1">{{ form.shipping_method.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div>
             <label class="block text-sm font-medium">Region</label>
             {{ form.region }}
             {% if form.region.errors %}
@@ -97,6 +104,14 @@
         <div class="mt-4 flex justify-between font-semibold">
           <span>Subtotal</span>
           <span>€{{ cart.subtotal }}</span>
+        </div>
+        <div class="mt-2 flex justify-between text-sm text-zinc-700">
+          <span>Shipping</span>
+          <span>€{{ shipping_cost_preview }}</span>
+        </div>
+        <div class="mt-2 flex justify-between font-semibold">
+          <span>Total</span>
+          <span>€{{ order_total_preview }}</span>
         </div>
       </div>
     </div>

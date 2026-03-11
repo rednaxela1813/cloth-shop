@@ -11,6 +11,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from importlib.util import find_spec
 from pathlib import Path
 
 from decouple import config
@@ -65,6 +66,10 @@ INSTALLED_APPS = [
     "apps.products",
     "apps.seo",
 ]
+
+# Use Jazzmin admin skin only when dependency is installed.
+if find_spec("jazzmin") is not None:
+    INSTALLED_APPS.insert(0, "jazzmin")
 
 SITE_ID = 1
 AUTH_USER_MODEL = "users.CustomUser"

@@ -13,6 +13,7 @@ from apps.cart.models import Cart
 from apps.products.models import ProductVariant
 from .gateways import stripe_gateway
 from .models import Address, Order, OrderItem, Payment, ProcessedStripeEvent
+from .shipping import calculate_shipping_cost, normalize_shipping_method
 
 logger = logging.getLogger(__name__)
 
@@ -55,13 +56,19 @@ def create_order_from_cart(request, cart: Cart, data: dict) -> Order:
             variant = locked_variants[item.variant_id]
             subtotal += variant.price * item.quantity
 
-        shipping_cost = Decimal("0.00")
+        shipping_method = normalize_shipping_method(data.get("shipping_method"))
+        shipping_cost = calculate_shipping_cost(
+            shipping_method=shipping_method,
+            subtotal=subtotal,
+            country=data.get("country"),
+        )
         total = subtotal + shipping_cost
 
         order = Order.objects.create(
             user=request.user if request.user.is_authenticated else None,
             email=data["email"],
             shipping_address=address,
+            shipping_method=shipping_method,
             subtotal=subtotal,
             shipping_cost=shipping_cost,
             total=total,
@@ -114,6 +121,7 @@ def cancel_order_and_restore_stock_if_pending(order: Order, *, source: str) -> b
             variant.stock += item.quantity
             variant.save(update_fields=["stock", "updated"])
 
+        locked_order._status_event_source = source
         locked_order.status = Order.Status.CANCELED
         locked_order.save(update_fields=["status", "updated"])
 
@@ -181,6 +189,7 @@ def create_stripe_payment(request, order: Order) -> Payment:
     payment.external_id = session.id or ""
     payment.gateway_url = session.url or cancel_url
     payment.raw_response = session.to_dict_recursive()
+    payment._status_event_source = "payment.start"
     payment.status = Payment.Status.PENDING
     payment.save(update_fields=["external_id", "gateway_url", "raw_response", "status", "updated"])
     logger.info(
@@ -197,6 +206,7 @@ def create_stripe_payment(request, order: Order) -> Payment:
 
 def _apply_payment_status(payment: Payment, new_status: str) -> None:
     old_status = payment.status
+    payment._status_event_source = f"payment.status.{new_status}"
     payment.status = new_status
     payment.save(update_fields=["status", "updated"])
 
@@ -214,6 +224,7 @@ def _apply_payment_status(payment: Payment, new_status: str) -> None:
 
     if new_status == Payment.Status.PAID:
         if payment.order.status != Order.Status.PAID:
+            payment.order._status_event_source = "payment.status.paid"
             payment.order.status = Order.Status.PAID
             payment.order.save(update_fields=["status", "updated"])
     elif new_status in {Payment.Status.CANCELED, Payment.Status.FAILED}:

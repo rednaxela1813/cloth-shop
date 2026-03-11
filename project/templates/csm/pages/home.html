@@ -12,10 +12,52 @@
         <h2 class="text-xl font-semibold">Trending now</h2>
         <p class="mt-1 text-sm text-zinc-600">Nové kúsky a najpopulárnejšie značky.</p>
       </div>
-      <a href="{% url 'products:list' %}" class="text-sm underline underline-offset-4 hover:text-zinc-600">
-  Zobraziť všetko
-</a>
+      <div class="flex items-end gap-3">
+        <form method="get" class="flex items-end gap-2">
+          <div>
+            <label for="home-category" class="block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+              Kategória
+            </label>
+            <select
+              id="home-category"
+              name="category"
+              class="mt-1 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
+              onchange="this.form.submit()"
+            >
+              <option value="">Všetky</option>
+              {% for cat in categories %}
+                <option value="{{ cat.slug }}" {% if selected_category_slug == cat.slug %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
 
+          <div>
+            <label for="home-subcategory" class="block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+              Podkategória
+            </label>
+            <select
+              id="home-subcategory"
+              name="subcategory"
+              class="mt-1 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm disabled:bg-zinc-100 disabled:text-zinc-500"
+              onchange="this.form.submit()"
+              {% if not selected_category_slug %}disabled{% endif %}
+            >
+              <option value="">Všetky</option>
+              {% for subcat in subcategories %}
+                <option value="{{ subcat.slug }}" {% if selected_subcategory_slug == subcat.slug %}selected{% endif %}>
+                  {{ subcat.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+
+        <a href="{% url 'products:list' %}" class="text-sm underline underline-offset-4 hover:text-zinc-600">
+          Zobraziť všetko
+        </a>
+      </div>
     </div>
 
     <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

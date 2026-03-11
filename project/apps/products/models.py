@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class ProductQuerySet(models.QuerySet):
@@ -300,6 +301,20 @@ class Category(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def clean(self):
+        super().clean()
+        if not self.parent_id:
+            return
+
+        if self.pk and self.parent_id == self.pk:
+            raise ValidationError({"parent": "Category cannot be parent of itself."})
+
+        ancestor = self.parent
+        while ancestor is not None:
+            if self.pk and ancestor.pk == self.pk:
+                raise ValidationError({"parent": "Cyclic category hierarchy is not allowed."})
+            ancestor = ancestor.parent
 
     def save(self, *args, **kwargs):
         # Генерируем slug один раз при создании (или если поле пустое)

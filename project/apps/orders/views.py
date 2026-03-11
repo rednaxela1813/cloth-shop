@@ -6,6 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from apps.cart.services import get_or_create_cart
 from .forms import CheckoutForm
+from .shipping import calculate_shipping_cost, normalize_shipping_method
 from .use_cases.checkout import build_checkout_initial, process_checkout_submission
 from .use_cases.handle_stripe_webhook import process_stripe_webhook
 from .use_cases.order_lookup import get_accessible_order
@@ -29,6 +30,16 @@ def checkout_view(request):
     else:
         form = CheckoutForm(initial=build_checkout_initial(request))
 
+    selected_shipping_method = normalize_shipping_method(
+        form.data.get("shipping_method") if form.is_bound else form.initial.get("shipping_method")
+    )
+    shipping_cost_preview = calculate_shipping_cost(
+        shipping_method=selected_shipping_method,
+        subtotal=cart.subtotal,
+        country=form.data.get("country") if form.is_bound else form.initial.get("country"),
+    )
+    order_total_preview = cart.subtotal + shipping_cost_preview
+
     return render(
         request,
         "csm/pages/checkout.html",
@@ -36,6 +47,8 @@ def checkout_view(request):
             "cart": cart,
             "items": items,
             "form": form,
+            "shipping_cost_preview": shipping_cost_preview,
+            "order_total_preview": order_total_preview,
         },
     )
 

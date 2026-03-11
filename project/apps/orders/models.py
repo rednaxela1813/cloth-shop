@@ -38,6 +38,11 @@ class Address(models.Model):
 
 
 class Order(models.Model):
+    class ShippingMethod(models.TextChoices):
+        PAKETA_PICKUP = "paketa_pickup", "Paketa pickup point"
+        DPD_HOME = "dpd_home", "DPD home delivery"
+        DPD_EXPRESS = "dpd_express", "DPD express"
+
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
         PAID = "paid", "Paid"
@@ -61,6 +66,11 @@ class Order(models.Model):
         related_name="orders",
     )
 
+    shipping_method = models.CharField(
+        max_length=30,
+        choices=ShippingMethod.choices,
+        default=ShippingMethod.DPD_HOME,
+    )
     currency = models.CharField(max_length=3, default="EUR")
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
@@ -78,6 +88,20 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         return f"Order {self.public_id}"
+
+    def save(self, *args, **kwargs):
+        is_create = self._state.adding
+        previous_status = None
+        if not is_create and self.pk:
+            previous_status = Order.objects.filter(pk=self.pk).values_list("status", flat=True).first()
+
+        super().save(*args, **kwargs)
+
+        if is_create or previous_status != self.status:
+            source = getattr(self, "_status_event_source", "system")
+            OrderStatusEvent.objects.create(order=self, status=self.status, source=source)
+        if hasattr(self, "_status_event_source"):
+            delattr(self, "_status_event_source")
 
 
 class OrderItem(models.Model):
@@ -147,6 +171,54 @@ class Payment(models.Model):
 
     def __str__(self) -> str:
         return f"Payment {self.provider} {self.status} for {self.order.public_id}"
+
+    def save(self, *args, **kwargs):
+        is_create = self._state.adding
+        previous_status = None
+        if not is_create and self.pk:
+            previous_status = Payment.objects.filter(pk=self.pk).values_list("status", flat=True).first()
+
+        super().save(*args, **kwargs)
+
+        if is_create or previous_status != self.status:
+            source = getattr(self, "_status_event_source", "system")
+            PaymentStatusEvent.objects.create(payment=self, status=self.status, source=source)
+        if hasattr(self, "_status_event_source"):
+            delattr(self, "_status_event_source")
+
+
+class OrderStatusEvent(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="status_events")
+    status = models.CharField(max_length=20, choices=Order.Status.choices)
+    source = models.CharField(max_length=64, default="system")
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created", "-id"]
+        indexes = [
+            models.Index(fields=["order", "created"]),
+            models.Index(fields=["status", "created"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"OrderStatusEvent {self.order.public_id}: {self.status}"
+
+
+class PaymentStatusEvent(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, related_name="status_events")
+    status = models.CharField(max_length=20, choices=Payment.Status.choices)
+    source = models.CharField(max_length=64, default="system")
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created", "-id"]
+        indexes = [
+            models.Index(fields=["payment", "created"]),
+            models.Index(fields=["status", "created"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"PaymentStatusEvent {self.payment_id}: {self.status}"
 
 
 class ProcessedStripeEvent(models.Model):

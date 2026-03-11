@@ -1,6 +1,8 @@
 # apps/orders/forms.py
 from django import forms
 
+from .models import Order
+
 
 class CheckoutForm(forms.Form):
     full_name = forms.CharField(max_length=120)
@@ -8,6 +10,7 @@ class CheckoutForm(forms.Form):
     phone = forms.CharField(max_length=40, required=False)
 
     country = forms.CharField(max_length=2)
+    shipping_method = forms.ChoiceField(choices=Order.ShippingMethod.choices)
     region = forms.CharField(max_length=120, required=False)
     city = forms.CharField(max_length=120)
     postal_code = forms.CharField(max_length=20, required=False)

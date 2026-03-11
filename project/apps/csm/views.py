@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db.models import Prefetch
 from django.shortcuts import render
 
-from apps.products.models import Product, ProductImage, ProductVariant
+from apps.products.models import Category, Product, ProductImage, ProductVariant
 from .forms import ContactMessageForm
 
 
@@ -30,8 +30,32 @@ def _random_category_cover_url(*, category_slug: str) -> str:
 
 
 def home_view(request):
+    categories = Category.objects.roots()
+
+    selected_category_slug = (request.GET.get("category") or "").strip()
+    selected_subcategory_slug = (request.GET.get("subcategory") or "").strip()
+
+    selected_category = categories.filter(slug=selected_category_slug).first() if selected_category_slug else None
+    subcategories = (
+        Category.objects.active()
+        .filter(parent=selected_category)
+        .order_by("sort_order", "name", "id")
+        if selected_category
+        else Category.objects.none()
+    )
+
+    selected_subcategory = (
+        subcategories.filter(slug=selected_subcategory_slug).first() if selected_subcategory_slug else None
+    )
+
+    trending_qs = Product.objects.trending()
+    if selected_subcategory:
+        trending_qs = trending_qs.filter(categories=selected_subcategory)
+    elif selected_category:
+        trending_qs = trending_qs.filter(categories=selected_category)
+
     trending_products = (
-        Product.objects.trending()
+        trending_qs.distinct()
         .prefetch_related(
             Prefetch(
                 "variants",
@@ -45,6 +69,10 @@ def home_view(request):
         "title": "Italian Luxury Clothing",
         "meta_description": "Nakupujte taliansku módu online – luxusné značky, rýchle doručenie.",
         "cart_count": 0,
+        "categories": categories,
+        "subcategories": subcategories,
+        "selected_category_slug": selected_category.slug if selected_category else "",
+        "selected_subcategory_slug": selected_subcategory.slug if selected_subcategory else "",
         "trending_products": trending_products,
         "women_tile_image_url": _random_category_cover_url(category_slug="women"),
         "men_tile_image_url": _random_category_cover_url(category_slug="men"),

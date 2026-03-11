@@ -46,6 +46,8 @@
                 class="block rounded-lg px-3 py-2 transition
                 {% if category.id == cat.id %}
                   bg-zinc-900 text-white
+                {% elif selected_root_category and selected_root_category.id == cat.id %}
+                  bg-zinc-100 text-zinc-900
                 {% else %}
                   hover:bg-zinc-100
                 {% endif %}
@@ -54,6 +56,40 @@
                 {{ cat.name }}
               </a>
             </li>
+
+            {% if selected_root_category and selected_root_category.id == cat.id and sidebar_subcategories %}
+              <li class="ml-3">
+                <a
+                  href="{% url 'catalog:category' selected_root_category.slug %}"
+                  class="block rounded-lg px-3 py-2 text-xs transition
+                  {% if category.id == selected_root_category.id %}
+                    bg-zinc-900 text-white
+                  {% else %}
+                    hover:bg-zinc-100 text-zinc-700
+                  {% endif %}
+                  "
+                >
+                  Všetko v {{ selected_root_category.name }}
+                </a>
+              </li>
+
+              {% for subcat in sidebar_subcategories %}
+                <li class="ml-3">
+                  <a
+                    href="{% url 'catalog:category' subcat.slug %}"
+                    class="block rounded-lg px-3 py-2 text-xs transition
+                    {% if category.id == subcat.id %}
+                      bg-zinc-900 text-white
+                    {% else %}
+                      hover:bg-zinc-100 text-zinc-700
+                    {% endif %}
+                    "
+                  >
+                    {{ subcat.name }}
+                  </a>
+                </li>
+              {% endfor %}
+            {% endif %}
           {% endfor %}
         </ul>
       </div>
@@ -66,26 +102,6 @@
         </p>
 
         <div class="flex flex-wrap items-center gap-2">
-          {% if subcategories %}
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-semibold uppercase tracking-wide text-zinc-600" for="subcategory">
-                Kategória
-              </label>
-              <select
-                id="subcategory"
-                class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
-                onchange="if (this.value) { window.location.href = this.value; }"
-              >
-                <option value="">{{ category.name }}</option>
-                {% for subcategory in subcategories %}
-                  <option value="{% url 'catalog:category' subcategory.slug %}">
-                    {{ subcategory.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          {% endif %}
-
           <form method="get" class="flex items-center gap-2">
           {% for k, v in request.GET.items %}
             {% if k != "sort" %}

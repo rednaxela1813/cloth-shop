@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from django.urls import reverse
 
+from apps.orders.models import Order
 from apps.orders.services import create_order_from_cart
 from apps.orders.use_cases.authorize_order_access import build_guest_payment_start_redirect
 
@@ -18,7 +19,10 @@ def build_checkout_initial(request) -> dict:
     """
     Build initial form data for checkout without coupling this logic to views.
     """
-    initial = {}
+    initial = {
+        "country": "SK",
+        "shipping_method": Order.ShippingMethod.DPD_HOME,
+    }
     if request.user.is_authenticated:
         initial["email"] = request.user.email
         initial["full_name"] = request.user.get_full_name()
