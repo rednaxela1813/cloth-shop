@@ -14,8 +14,7 @@ def _random_category_cover_url(*, category_slug: str) -> str:
             product__categories__slug=category_slug,
             product__categories__is_active=True,
         )
-        .distinct()
-        .order_by("?")
+        .order_by("sort_order", "id")
         .first()
     )
     if not image:
@@ -37,7 +36,12 @@ def home_view(request):
                 "variants",
                 queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
                 to_attr="_prefetched_active_variants_for_pricing",
-            )
+            ),
+            Prefetch(
+                "images",
+                queryset=ProductImage.objects.order_by("sort_order", "id"),
+                to_attr="_prefetched_images_for_primary",
+            ),
         )[:8]
     )
 

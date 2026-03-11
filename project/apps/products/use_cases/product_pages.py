@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
-from apps.products.models import Product, ProductVariant
+from apps.products.models import Product, ProductImage, ProductVariant
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
 from apps.products.services.product_variant_presenter import build_active_variants_payload
 
@@ -41,7 +41,12 @@ def build_product_list_context(*, request, page_size: int) -> dict:
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
-        )
+        ),
+        Prefetch(
+            "images",
+            queryset=ProductImage.objects.order_by("sort_order", "id"),
+            to_attr="_prefetched_images_for_primary",
+        ),
     )
     qs = with_sort_price(qs)
 
@@ -93,7 +98,27 @@ def build_product_list_context(*, request, page_size: int) -> dict:
 
 
 def build_product_detail_result(*, request, public_id, slug: str) -> ProductDetailResult:
-    product = get_object_or_404(Product, public_id=public_id, is_active=True)
+    product = get_object_or_404(
+        Product.objects.prefetch_related(
+            Prefetch(
+                "images",
+                queryset=ProductImage.objects.order_by("sort_order", "id"),
+                to_attr="_prefetched_images_for_primary",
+            ),
+            Prefetch(
+                "variants",
+                queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
+                to_attr="_prefetched_active_variants_for_pricing",
+            ),
+            Prefetch(
+                "variants",
+                queryset=ProductVariant.objects.filter(is_active=True).order_by("color", "size", "id"),
+                to_attr="_prefetched_active_variants_for_selection",
+            ),
+        ),
+        public_id=public_id,
+        is_active=True,
+    )
     if slug != product.slug:
         return ProductDetailResult(
             redirect_slug=product.slug,
@@ -101,7 +126,9 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
             product=product,
         )
 
-    images = product.images.order_by("sort_order", "id")
+    images = getattr(product, "_prefetched_images_for_primary", None)
+    if images is None:
+        images = list(product.images.order_by("sort_order", "id"))
     primary_image = product.primary_image
     absolute_url = request.build_absolute_uri()
 
@@ -120,7 +147,12 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
                 "variants",
                 queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
                 to_attr="_prefetched_active_variants_for_pricing",
-            )
+            ),
+            Prefetch(
+                "images",
+                queryset=ProductImage.objects.order_by("sort_order", "id"),
+                to_attr="_prefetched_images_for_primary",
+            ),
         )
         .order_by("-created", "id")[:8]
         if product.brand

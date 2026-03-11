@@ -1,25 +1,25 @@
 # csm/context_processors.py
 from django.db.models import Sum
 
-from apps.cart.models import Cart
+from apps.cart.models import CartItem
 from apps.cart.services import SESSION_CART_ID
 
 
 def _cart_count(request) -> int:
-    cart = None
+    filters = {"cart__is_active": True}
+
     if request.user.is_authenticated:
-        cart = Cart.objects.filter(user=request.user, is_active=True).first()
+        filters["cart__user"] = request.user
     else:
         cart_id = request.session.get(SESSION_CART_ID)
         if cart_id:
-            cart = Cart.objects.filter(id=cart_id, is_active=True).first()
+            filters["cart_id"] = cart_id
         elif request.session.session_key:
-            cart = Cart.objects.filter(session_key=request.session.session_key, is_active=True).first()
+            filters["cart__session_key"] = request.session.session_key
+        else:
+            return 0
 
-    if not cart:
-        return 0
-
-    total = cart.items.aggregate(total=Sum("quantity"))["total"]
+    total = CartItem.objects.filter(**filters).aggregate(total=Sum("quantity"))["total"]
     return int(total or 0)
 
 

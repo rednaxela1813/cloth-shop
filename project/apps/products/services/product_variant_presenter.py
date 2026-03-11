@@ -8,7 +8,11 @@ def build_active_variants_payload(*, product):
     2) selected_variant (первый с stock > 0, иначе первый из списка, иначе None)
     3) payload для шаблона/JS
     """
-    active_variants = list(product.variants.filter(is_active=True).order_by("color", "size", "id"))
+    prefetched = getattr(product, "_prefetched_active_variants_for_selection", None)
+    if prefetched is None:
+        active_variants = list(product.variants.filter(is_active=True).order_by("color", "size", "id"))
+    else:
+        active_variants = list(prefetched)
     selected_variant = next((v for v in active_variants if v.stock > 0), active_variants[0] if active_variants else None)
 
     variant_payload = [

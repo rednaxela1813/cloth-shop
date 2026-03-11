@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from django.db import models
+from django.utils.functional import cached_property
 
 
 class ProductQuerySet(models.QuerySet):
@@ -57,21 +58,31 @@ class Product(models.Model):
             self.slug = generate_unique_slug(model_cls=Product, source_value=self.name, fallback="product")
         super().save(*args, **kwargs)
 
-    @property
+    @cached_property
     def primary_image(self):
-        primary = self.images.filter(is_primary=True).order_by("sort_order", "id").first()
-        if primary:
-            return primary
-        return self.images.order_by("sort_order", "id").first()
+        prefetched = getattr(self, "_prefetched_images_for_primary", None)
+        if prefetched is None:
+            prefetched = list(self.images.order_by("sort_order", "id"))
+        if not prefetched:
+            return None
+        for image in prefetched:
+            if image.is_primary:
+                return image
+        return prefetched[0]
 
     def _pricing_variants(self):
         # Use prefetched variants when available to avoid N+1 on listing pages.
         prefetched = getattr(self, "_prefetched_active_variants_for_pricing", None)
         if prefetched is not None:
             return prefetched
-        return list(self.variants.filter(is_active=True).order_by("price", "id"))
+        cached = getattr(self, "_cached_active_variants_for_pricing", None)
+        if cached is not None:
+            return cached
+        cached = list(self.variants.filter(is_active=True).order_by("price", "id"))
+        self._cached_active_variants_for_pricing = cached
+        return cached
 
-    @property
+    @cached_property
     def lowest_priced_variant(self):
         variants = self._pricing_variants()
         return variants[0] if variants else None
@@ -90,9 +101,15 @@ class Product(models.Model):
             return lowest.compare_at
         return self.compare_at
 
-    @property
+    @cached_property
     def default_variant(self):
-        return self.variants.filter(is_active=True).order_by("-stock", "id").first()
+        prefetched = getattr(self, "_prefetched_active_variants_for_default", None)
+        if prefetched is None:
+            prefetched = self._pricing_variants()
+        if not prefetched:
+            return None
+        # Match DB ordering "-stock, id" without an extra query.
+        return max(prefetched, key=lambda variant: (variant.stock, -variant.id))
     
     @property
     def primary_category(self):
@@ -151,12 +168,17 @@ class ProductVariant(models.Model):
     def __str__(self) -> str:
         return f"{self.product.name} — {self.size} / {self.color}"
 
-    @property
+    @cached_property
     def primary_image(self):
-        primary = self.images.filter(is_primary=True).order_by("sort_order", "id").first()
-        if primary:
-            return primary
-        return self.images.order_by("sort_order", "id").first()
+        prefetched = getattr(self, "_prefetched_images_for_primary", None)
+        if prefetched is None:
+            prefetched = list(self.images.order_by("sort_order", "id"))
+        if not prefetched:
+            return None
+        for image in prefetched:
+            if image.is_primary:
+                return image
+        return prefetched[0]
 
     @property
     def cart_image(self):

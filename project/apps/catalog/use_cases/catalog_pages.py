@@ -5,7 +5,7 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_catalog_index, breadcrumbs_for_category
-from apps.products.models import Category, Product, ProductVariant
+from apps.products.models import Category, Product, ProductImage, ProductVariant
 from apps.products.services.product_sorting_service import sort_products_queryset
 
 
@@ -16,7 +16,12 @@ def build_catalog_index_context(*, request, page_size: int) -> dict:
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
-        )
+        ),
+        Prefetch(
+            "images",
+            queryset=ProductImage.objects.order_by("sort_order", "id"),
+            to_attr="_prefetched_images_for_primary",
+        ),
     )
     qs, sort = sort_products_queryset(request=request, queryset=qs)
 
@@ -47,7 +52,12 @@ def build_catalog_category_context(*, request, slug: str, page_size: int) -> dic
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
-        )
+        ),
+        Prefetch(
+            "images",
+            queryset=ProductImage.objects.order_by("sort_order", "id"),
+            to_attr="_prefetched_images_for_primary",
+        ),
     )
     qs, sort = sort_products_queryset(request=request, queryset=qs)
 
