@@ -33,6 +33,54 @@ docker compose -f docker-compose.prod.yml up --build
 
 `Dockerfile` defaults to production runtime (`gunicorn` + `collectstatic`), while `docker-compose.yml` overrides command/settings for dev workflow.
 
+## Go-Live Runbook
+
+### 0) Prepare production env file
+
+Create `project/.env.prod` (separate from `.env` used in development).
+
+### 1) Build and start prod stack
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### 2) Apply migrations
+
+```bash
+docker compose -f docker-compose.prod.yml exec web python manage.py migrate
+```
+
+### 3) Run release preflight
+
+```bash
+docker compose -f docker-compose.prod.yml exec web sh scripts/preflight_release.sh --skip-tests
+```
+
+For full validation (with tests):
+
+```bash
+docker compose -f docker-compose.prod.yml exec web sh scripts/preflight_release.sh
+```
+
+### 4) Check health endpoint
+
+```bash
+curl -fsS http://localhost:8000/healthz
+```
+
+Expected response: `ok`
+
+### 5) Create DB backup before/after release
+
+From repository root:
+
+```bash
+./scripts/backup_postgres.sh
+```
+
+Backup file is written to `./backups/`.
+
 ## Stripe payments
 
 Required env vars:

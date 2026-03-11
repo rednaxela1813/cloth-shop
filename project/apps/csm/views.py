@@ -1,10 +1,15 @@
 # project/apps/csm/views.py
 from django.conf import settings
 from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from apps.products.models import Category, Product, ProductImage, ProductVariant
 from .forms import ContactMessageForm
+
+
+def healthz_view(request):
+    return HttpResponse("ok", content_type="text/plain")
 
 
 def _random_category_cover_url(*, category_slug: str) -> str:

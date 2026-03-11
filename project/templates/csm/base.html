@@ -1,5 +1,5 @@
 {# project/templates/csm/base.html #}
-{% load static tailwind_tags %}
+{% load static %}
 <!doctype html>
 <html lang="sk" class="h-full">
 <head>
@@ -11,8 +11,6 @@
   <meta name="description" content="{% block meta_description %}Nakupujte taliansku módu online – autentické kúsky, rýchle doručenie.{% endblock %}">
 
   <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
-
-  {% tailwind_css %}
 
   <!-- OpenGraph -->
   <meta property="og:title" content="{% block og_title %}Italian Luxury Clothing{% endblock %}">

@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.csm.apps.CsmConfig",
     "apps.cart.apps.CartConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.shipping.apps.ShippingConfig",
     "apps.catalog",
     "apps.products",
     "apps.seo",

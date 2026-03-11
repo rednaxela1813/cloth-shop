@@ -4,6 +4,16 @@ from decouple import config
 
 DEBUG = env_bool("DEBUG", default=False)
 
+# Serve collected static files via WhiteNoise when running behind gunicorn.
+MIDDLEWARE = [MIDDLEWARE[0], "whitenoise.middleware.WhiteNoiseMiddleware", *MIDDLEWARE[1:]]
+STATICFILES_DIRS = [BASE_DIR / "theme" / "static"]
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Use compressed static storage in production-like local runs to avoid
+    # collectstatic failures on missing third-party source maps.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
 # Production security defaults. Override via env if needed.
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=True)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

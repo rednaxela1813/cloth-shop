@@ -9,7 +9,7 @@ from django.contrib.sitemaps.views import sitemap as django_sitemap_view
 from apps.seo.sitemaps import StaticViewSitemap, ActiveProductSitemap
 from apps.seo.views import robots_txt
 
-from apps.csm.views import home_view  # ✅ добавь импорт
+from apps.csm.views import healthz_view, home_view  # ✅ добавь импорт
 
 sitemaps = {
     "static": StaticViewSitemap,
@@ -18,6 +18,7 @@ sitemaps = {
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("healthz", healthz_view, name="healthz"),
 
     # ✅ глобальный alias для reverse("home")
     path("", home_view, name="home"),

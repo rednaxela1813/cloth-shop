@@ -11,9 +11,9 @@ from django.urls import reverse
 
 from apps.cart.models import Cart
 from apps.products.models import ProductVariant
+from apps.shipping.services import calculate_shipping_cost, normalize_shipping_method
 from .gateways import stripe_gateway
 from .models import Address, Order, OrderItem, Payment, ProcessedStripeEvent
-from .shipping import calculate_shipping_cost, normalize_shipping_method
 
 logger = logging.getLogger(__name__)
 

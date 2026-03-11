@@ -1,10 +1,18 @@
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from apps.products.models import Category, Product, ProductCategory, ProductImage
 
 
+class HealthzViewTests(SimpleTestCase):
+    def test_healthz_returns_ok(self):
+        response = self.client.get("/healthz")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.decode(), "ok")
+
+
 class HomeViewCategoryTilesTests(TestCase):
+
     def test_home_view_exposes_random_women_tile_image_url(self):
         women = Category.objects.create(name="Women", slug="women", is_active=True)
         product = Product.objects.create(name="Dress", is_active=True)

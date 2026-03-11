@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from .models import Order
+from apps.orders.models import Order
 
 _FREE_SHIPPING_THRESHOLD = Decimal("120.00")
 
@@ -26,11 +26,9 @@ def calculate_shipping_cost(*, shipping_method: str, subtotal: Decimal, country:
     else:
         base = Decimal("4.90")
 
-    # Free shipping applies to standard delivery methods above threshold.
     if method in {Order.ShippingMethod.PAKETA_PICKUP, Order.ShippingMethod.DPD_HOME} and subtotal >= _FREE_SHIPPING_THRESHOLD:
         base = Decimal("0.00")
 
-    # Non-SK/CZ delivery is usually pricier for last-mile.
     if country_code and country_code not in {"SK", "CZ"}:
         base += Decimal("2.00")
 

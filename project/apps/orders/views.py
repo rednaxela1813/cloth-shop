@@ -5,8 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.cart.services import get_or_create_cart
+from apps.shipping.services import calculate_shipping_cost, normalize_shipping_method
 from .forms import CheckoutForm
-from .shipping import calculate_shipping_cost, normalize_shipping_method
 from .use_cases.checkout import build_checkout_initial, process_checkout_submission
 from .use_cases.handle_stripe_webhook import process_stripe_webhook
 from .use_cases.order_lookup import get_accessible_order
