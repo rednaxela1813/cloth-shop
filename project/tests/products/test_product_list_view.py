@@ -129,3 +129,23 @@ def test_product_list_filter_in_stock_only(client):
 
     assert resp.status_code == 200
     assert list(resp.context["page_obj"].object_list) == [in_stock]
+
+
+def test_product_list_cards_link_to_product_detail_instead_of_posting_to_cart(client):
+    product = Product.objects.create(name="Coat", brand="Gucci", price="10.00", is_active=True)
+    variant = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="COAT-M-BLK",
+        price="10.00",
+        stock=2,
+        is_active=True,
+    )
+
+    resp = client.get(reverse("products:list"))
+
+    assert resp.status_code == 200
+    html = resp.content.decode("utf-8")
+    assert reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug}) in html
+    assert reverse("cart:add", kwargs={"public_id": variant.public_id}) not in html

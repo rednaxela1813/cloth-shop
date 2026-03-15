@@ -26,6 +26,7 @@ urlpatterns = [
     # ✅ подключаем остальные страницы csm (help/returns/...)
     path("", include("apps.csm.urls")),
 
+    path("account/", include("apps.accounts.urls")),
     path("cart/", include("apps.cart.urls")),
     path("checkout/", include("apps.orders.urls")),
     path("shop/", include("apps.products.urls")),

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "config.users.apps.UsersConfig",
+    "apps.accounts.apps.AccountsConfig",
     "apps.csm.apps.CsmConfig",
     "apps.cart.apps.CartConfig",
     "apps.orders.apps.OrdersConfig",
@@ -159,9 +160,60 @@ STATIC_URL = config("STATIC_URL", default="/static/")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
+USE_S3_MEDIA = env_bool("USE_S3_MEDIA", default=False)
+MEDIA_STORAGE_BACKEND = "django.core.files.storage.FileSystemStorage"
+MEDIA_STORAGE_OPTIONS: dict = {}
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+if USE_S3_MEDIA:
+    if "storages" not in INSTALLED_APPS:
+        INSTALLED_APPS.append("storages")
+
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="")
+    AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="")
+    AWS_S3_CUSTOM_DOMAIN = config("AWS_S3_CUSTOM_DOMAIN", default="")
+    AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE", default="auto")
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = env_bool("AWS_QUERYSTRING_AUTH", default=False)
+    AWS_S3_FILE_OVERWRITE = env_bool("AWS_S3_FILE_OVERWRITE", default=False)
+    AWS_MEDIA_LOCATION = config("AWS_MEDIA_LOCATION", default="media")
+
+    MEDIA_STORAGE_BACKEND = "storages.backends.s3.S3Storage"
+    MEDIA_STORAGE_OPTIONS = {
+        "access_key": AWS_ACCESS_KEY_ID,
+        "secret_key": AWS_SECRET_ACCESS_KEY,
+        "bucket_name": AWS_STORAGE_BUCKET_NAME,
+        "region_name": AWS_S3_REGION_NAME or None,
+        "endpoint_url": AWS_S3_ENDPOINT_URL or None,
+        "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
+        "default_acl": None,
+        "querystring_auth": AWS_QUERYSTRING_AUTH,
+        "file_overwrite": AWS_S3_FILE_OVERWRITE,
+        "location": AWS_MEDIA_LOCATION,
+    }
+
+    if AWS_S3_CUSTOM_DOMAIN:
+        default_media_url = f"https://{AWS_S3_CUSTOM_DOMAIN.rstrip('/')}/{AWS_MEDIA_LOCATION.strip('/')}/"
+    elif AWS_S3_ENDPOINT_URL:
+        default_media_url = (
+            f"{AWS_S3_ENDPOINT_URL.rstrip('/')}/{AWS_STORAGE_BUCKET_NAME}/{AWS_MEDIA_LOCATION.strip('/')}/"
+        )
+    else:
+        default_media_url = f"/{AWS_MEDIA_LOCATION.strip('/')}/"
+
+    MEDIA_URL = config("MEDIA_URL", default=default_media_url)
+    STORAGES = {
+        "default": {
+            "BACKEND": MEDIA_STORAGE_BACKEND,
+            "OPTIONS": MEDIA_STORAGE_OPTIONS,
+        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+else:
+    MEDIA_URL = config("MEDIA_URL", default="/media/")
+    MEDIA_ROOT = BASE_DIR / "media"
 
 CONTACT_SEND_ENABLED = env_bool("CONTACT_SEND_ENABLED", default=False)
 
@@ -169,3 +221,5 @@ STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")
 ORDER_ACCESS_TOKEN_MAX_AGE = config("ORDER_ACCESS_TOKEN_MAX_AGE", default=7200, cast=int)
+LOGIN_URL = "/account/login/"
+LOGIN_REDIRECT_URL = "/account/"

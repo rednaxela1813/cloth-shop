@@ -1,17 +1,56 @@
 from django import forms
 from django.forms import modelform_factory
 from django.contrib import admin
+from django.db.models import Prefetch
+from django.utils.html import format_html
 from apps.seo.models import SeoMeta
 from .models import Category, Product, ProductCategory, ProductImage, ProductVariant, VariantImage
+
+
+class AdminImagePreviewMixin:
+    preview_width = 120
+
+    def _render_image_preview(self, field_file):
+        if not field_file:
+            return "No image"
+        return format_html(
+            '<img src="{}" alt="" style="max-width: {}px; max-height: {}px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;" />',
+            field_file.url,
+            self.preview_width,
+            self.preview_width,
+        )
 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     can_delete = False
-    fields = ("image_url", "image_original", "image_card", "image_thumb", "alt", "sort_order", "is_primary")
-    readonly_fields = ()
+    fields = (
+        "image_url",
+        "image_original",
+        "image_original_preview",
+        "image_card",
+        "image_card_preview",
+        "image_thumb",
+        "image_thumb_preview",
+        "alt",
+        "sort_order",
+        "is_primary",
+    )
+    readonly_fields = ("image_original_preview", "image_card_preview", "image_thumb_preview")
     ordering = ("sort_order", "id")
+
+    @admin.display(description="Original preview")
+    def image_original_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_original)
+
+    @admin.display(description="Card preview")
+    def image_card_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_card)
+
+    @admin.display(description="Thumb preview")
+    def image_thumb_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_thumb)
 
 
 class ProductCategoryInline(admin.TabularInline):
@@ -35,8 +74,31 @@ class VariantImageInline(admin.TabularInline):
     model = VariantImage
     extra = 1
     can_delete = False
-    fields = ("image_original", "image_card", "image_thumb", "alt", "sort_order", "is_primary")
+    fields = (
+        "image_original",
+        "image_original_preview",
+        "image_card",
+        "image_card_preview",
+        "image_thumb",
+        "image_thumb_preview",
+        "alt",
+        "sort_order",
+        "is_primary",
+    )
+    readonly_fields = ("image_original_preview", "image_card_preview", "image_thumb_preview")
     ordering = ("sort_order", "id")
+
+    @admin.display(description="Original preview")
+    def image_original_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_original)
+
+    @admin.display(description="Card preview")
+    def image_card_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_card)
+
+    @admin.display(description="Thumb preview")
+    def image_thumb_preview(self, obj):
+        return AdminImagePreviewMixin()._render_image_preview(obj.image_thumb)
 
 
 class SeoMetaFormMixin:
@@ -101,27 +163,53 @@ class ProductAdminForm(SeoMetaFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["origin_country"].widget = forms.TextInput()
+        self.fields["description"].widget = forms.Textarea(attrs={"rows": 5})
+        self.fields["details"].widget = forms.Textarea(attrs={"rows": 5})
         self._add_seo_fields()
         self._init_seo_fields()
 
 
 @admin.register(Product)
-class ProductAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
+class ProductAdmin(AdminImagePreviewMixin, SeoMetaAdminMixin, admin.ModelAdmin):
     form = ProductAdminForm
-    list_display = ("name", "brand", "price", "is_active", "is_trending", "created")
+    list_display = ("name", "brand", "display_price_admin", "is_active", "is_trending", "created")
     list_filter = ("is_active", "is_trending", "brand")
     search_fields = ("name", "brand", "slug")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductCategoryInline, ProductImageInline, ProductVariantInline]
     fieldsets = (
-        (None, {"fields": ("name", "slug", "brand", "price", "compare_at")}),
+        (None, {"fields": ("name", "slug", "brand", "origin_country", "description", "details")}),
         ("Status", {"fields": ("is_active", "is_trending")}),
-        ("SEO", {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image")}),
+        ("SEO", {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image", "seo_og_image_preview")}),
     )
+    readonly_fields = ("seo_og_image_preview",)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                Prefetch(
+                    "variants",
+                    queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
+                    to_attr="_prefetched_active_variants_for_pricing",
+                )
+            )
+        )
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         form._save_seo_fields(obj)
+
+    @admin.display(description="Price")
+    def display_price_admin(self, obj):
+        return obj.display_price
+
+    @admin.display(description="Current OG image")
+    def seo_og_image_preview(self, obj):
+        seo = getattr(obj, "seo_meta", None)
+        return self._render_image_preview(seo.og_image if seo else None)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -136,6 +224,17 @@ class CategoryProductInline(admin.TabularInline):
     ordering = ("sort_order", "id")
 
 
+class CategoryChildInline(admin.TabularInline):
+    model = Category
+    fk_name = "parent"
+    extra = 1
+    verbose_name = "Subcategory"
+    verbose_name_plural = "Subcategories"
+    fields = ("name", "is_active", "sort_order")
+    ordering = ("sort_order", "name", "id")
+    show_change_link = True
+
+
 class CategoryAdminForm(SeoMetaFormMixin, forms.ModelForm):
     class Meta:
         model = Category
@@ -143,10 +242,12 @@ class CategoryAdminForm(SeoMetaFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["parent"].label = "Nadradená kategória (podkategória, voliteľné)"
-        self.fields["parent"].help_text = "Vyberte nadradenú kategóriu, ak ide o podkategóriu."
+        self.fields["parent"].label = "Parent category"
+        self.fields["parent"].help_text = "Leave empty for a top-level category. Select a parent only when creating a subcategory."
+        parent_queryset = self.fields["parent"].queryset.order_by("name", "id")
         if self.instance and self.instance.pk:
-            self.fields["parent"].queryset = self.fields["parent"].queryset.exclude(pk=self.instance.pk)
+            parent_queryset = parent_queryset.exclude(pk=self.instance.pk)
+        self.fields["parent"].queryset = parent_queryset
         self._add_seo_fields()
         self._init_seo_fields()
 
@@ -158,7 +259,8 @@ class CategoryAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
     list_filter = ("is_active",)
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
-    inlines = [CategoryProductInline]
+    inlines = [CategoryChildInline, CategoryProductInline]
+    list_select_related = ("parent",)
     fieldsets = (
         (None, {"fields": ("name", "slug", "parent", "is_active", "sort_order")}),
         ("SEO", {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image")}),
@@ -168,15 +270,13 @@ class CategoryAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         form._save_seo_fields(obj)
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
     list_display = ("product", "category", "is_primary", "sort_order", "created")
     list_filter = ("is_primary", "category")
     search_fields = ("product__name", "category__name")
+    list_select_related = ("product", "category")
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -187,6 +287,7 @@ class ProductImageAdmin(admin.ModelAdmin):
     list_display = ("product", "is_primary", "sort_order", "created")
     list_filter = ("is_primary",)
     search_fields = ("product__name", "alt", "image_url")
+    list_select_related = ("product",)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -198,6 +299,7 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "color", "size")
     search_fields = ("product__name", "sku")
     inlines = [VariantImageInline]
+    list_select_related = ("product",)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -208,6 +310,7 @@ class VariantImageAdmin(admin.ModelAdmin):
     list_display = ("variant", "is_primary", "sort_order", "created")
     list_filter = ("is_primary",)
     search_fields = ("variant__sku", "variant__product__name", "alt")
+    list_select_related = ("variant", "variant__product")
 
     def has_delete_permission(self, request, obj=None):
         return False

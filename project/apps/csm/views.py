@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from apps.products.models import Category, Product, ProductImage, ProductVariant
+from apps.shipping.services import get_return_window_days
 from .forms import ContactMessageForm
 
 
@@ -63,6 +64,11 @@ def home_view(request):
         trending_qs.distinct()
         .prefetch_related(
             Prefetch(
+                "images",
+                queryset=ProductImage.objects.order_by("sort_order", "id"),
+                to_attr="_prefetched_images_for_listing",
+            ),
+            Prefetch(
                 "variants",
                 queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
                 to_attr="_prefetched_active_variants_for_pricing",
@@ -91,6 +97,7 @@ def help_view(request):
         "title": "Help - Italian Luxury Clothing",
         "meta_description": "Get help with your orders, shipping, returns, and more at Italian Luxury Clothing.",
         "cart_count": 0,
+        "return_window_days": get_return_window_days(),
     }
     return render(request, "csm/pages/help.html", context)
 
@@ -100,6 +107,7 @@ def returns_view(request):
         "title": "Returns - Italian Luxury Clothing",
         "meta_description": "Learn about our return policy and how to return items at Italian Luxury Clothing.",
         "cart_count": 0,
+        "return_window_days": get_return_window_days(),
     }
     return render(request, "csm/pages/returns.html", context)
 

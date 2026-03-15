@@ -1,0 +1,77 @@
+{% extends "csm/base.html" %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<section class="mx-auto mt-12 max-w-md">
+  <div class="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+    <h1 class="text-2xl font-semibold text-zinc-900">Vytvoriť účet</h1>
+    <p class="mt-2 text-sm text-zinc-600">Zaregistrujte sa, aby ste mohli sledovať objednávky a spravovať svoj účet.</p>
+
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      {% if form.non_field_errors %}
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ form.non_field_errors|striptags }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-zinc-700">Email</label>
+        <input
+          id="{{ form.email.id_for_label }}"
+          type="email"
+          name="{{ form.email.html_name }}"
+          value="{{ form.email.value|default:'' }}"
+          class="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm"
+          required
+        >
+        {% if form.email.errors %}
+          <div class="mt-1 text-xs text-red-600">{{ form.email.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-zinc-700">Heslo</label>
+        <input
+          id="{{ form.password1.id_for_label }}"
+          type="password"
+          name="{{ form.password1.html_name }}"
+          class="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm"
+          required
+        >
+        {% if form.password1.errors %}
+          <div class="mt-1 text-xs text-red-600">{{ form.password1.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-zinc-700">Potvrdiť heslo</label>
+        <input
+          id="{{ form.password2.id_for_label }}"
+          type="password"
+          name="{{ form.password2.html_name }}"
+          class="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm"
+          required
+        >
+        {% if form.password2.errors %}
+          <div class="mt-1 text-xs text-red-600">{{ form.password2.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="w-full rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white">
+        Vytvoriť účet
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-zinc-600">
+      Už máte účet?
+      <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="font-medium text-zinc-900 hover:underline">
+        Prihlásiť sa
+      </a>
+    </p>
+  </div>
+</section>
+{% endblock %}

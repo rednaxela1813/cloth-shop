@@ -1,3 +1,4 @@
+# project/apps/products/services/slug_service.py
 from __future__ import annotations
 
 from django.utils.text import slugify

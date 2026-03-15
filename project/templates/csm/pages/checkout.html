@@ -11,77 +11,99 @@
           {% csrf_token %}
           {% if form.errors %}
             <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Please исправьте ошибки в форме.
+              <p class="font-medium">
+                {% if form.non_field_errors and not has_field_errors %}
+                  Проверьте сообщение ниже.
+                {% else %}
+                  Проверьте выделенные поля ниже.
+                {% endif %}
+              </p>
+              {% if form.non_field_errors %}
+                <ul class="mt-2 list-disc pl-5">
+                  {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              {% if has_field_errors %}
+                <ul class="mt-2 list-disc pl-5">
+                  {% for field in form %}
+                    {% for error in field.errors %}
+                      <li><a href="#{{ field.id_for_label }}" class="underline">{{ field.label }}:</a> {{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                </ul>
+              {% endif %}
             </div>
           {% endif %}
           <div>
             <label class="block text-sm font-medium">Full name</label>
             {{ form.full_name }}
             {% if form.full_name.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.full_name.errors|striptags }}</div>
+              <div id="full-name-error" class="text-xs text-red-600 mt-1">{{ form.full_name.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Email</label>
             {{ form.email }}
             {% if form.email.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.email.errors|striptags }}</div>
+              <div id="email-error" class="text-xs text-red-600 mt-1">{{ form.email.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Phone</label>
             {{ form.phone }}
             {% if form.phone.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.phone.errors|striptags }}</div>
+              <div id="phone-error" class="text-xs text-red-600 mt-1">{{ form.phone.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Country (2-letter)</label>
             {{ form.country }}
             {% if form.country.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.country.errors|striptags }}</div>
+              <div id="country-error" class="text-xs text-red-600 mt-1">{{ form.country.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Shipping method</label>
             {{ form.shipping_method }}
             {% if form.shipping_method.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.shipping_method.errors|striptags }}</div>
+              <div id="shipping-method-error" class="text-xs text-red-600 mt-1">{{ form.shipping_method.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Region</label>
             {{ form.region }}
             {% if form.region.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.region.errors|striptags }}</div>
+              <div id="region-error" class="text-xs text-red-600 mt-1">{{ form.region.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">City</label>
             {{ form.city }}
             {% if form.city.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.city.errors|striptags }}</div>
+              <div id="city-error" class="text-xs text-red-600 mt-1">{{ form.city.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Postal code</label>
             {{ form.postal_code }}
             {% if form.postal_code.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.postal_code.errors|striptags }}</div>
+              <div id="postal-code-error" class="text-xs text-red-600 mt-1">{{ form.postal_code.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Address line 1</label>
             {{ form.address_line1 }}
             {% if form.address_line1.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.address_line1.errors|striptags }}</div>
+              <div id="address-line1-error" class="text-xs text-red-600 mt-1">{{ form.address_line1.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
             <label class="block text-sm font-medium">Address line 2</label>
             {{ form.address_line2 }}
             {% if form.address_line2.errors %}
-              <div class="text-xs text-red-600 mt-1">{{ form.address_line2.errors|striptags }}</div>
+              <div id="address-line2-error" class="text-xs text-red-600 mt-1">{{ form.address_line2.errors|striptags }}</div>
             {% endif %}
           </div>
 

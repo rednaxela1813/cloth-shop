@@ -48,6 +48,7 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ("public_id", "email")
     readonly_fields = ("status",)
     inlines = [OrderItemInline, PaymentInline, OrderStatusEventInline]
+    list_select_related = ("shipping_address", "user")
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -60,6 +61,7 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ("external_id", "order__public_id")
     readonly_fields = ("status",)
     inlines = [PaymentStatusEventInline]
+    list_select_related = ("order",)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -71,6 +73,7 @@ class OrderStatusEventAdmin(admin.ModelAdmin):
     list_filter = ("status", "source")
     search_fields = ("order__public_id", "source")
     readonly_fields = ("order", "status", "source", "created")
+    list_select_related = ("order",)
 
     def has_add_permission(self, request):
         return False
@@ -88,6 +91,7 @@ class PaymentStatusEventAdmin(admin.ModelAdmin):
     list_filter = ("status", "source")
     search_fields = ("payment__external_id", "payment__order__public_id", "source")
     readonly_fields = ("payment", "status", "source", "created")
+    list_select_related = ("payment", "payment__order")
 
     def has_add_permission(self, request):
         return False

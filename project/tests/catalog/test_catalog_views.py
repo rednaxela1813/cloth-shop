@@ -8,23 +8,27 @@ pytestmark = pytest.mark.django_db
 
 def test_catalog_list_shows_only_active_root_categories(client):
     """
-    /catalog/ должен показывать только активные корневые категории (parent=None),
-    отсортированные по sort_order, затем name.
+    /catalog/ должен показывать только активные корневые категории (parent=None)
+    с активными товарами, отсортированные по sort_order, затем name.
     """
     root1 = Category.objects.create(name="Men", sort_order=2, is_active=True)
     root2 = Category.objects.create(name="Women", sort_order=1, is_active=True)
+    root3 = Category.objects.create(name="Sale", sort_order=3, is_active=True)
 
     # не корень
     Category.objects.create(name="Shoes", parent=root1, is_active=True)
 
-    # неактивная
-    Category.objects.create(name="Sale", sort_order=0, is_active=False)
+    p1 = Product.objects.create(name="Boots", brand="X", price="10.00", is_active=True)
+    p2 = Product.objects.create(name="Coat", brand="X", price="20.00", is_active=True)
+    ProductCategory.objects.create(product=p1, category=root1, is_primary=True)
+    ProductCategory.objects.create(product=p2, category=root2, is_primary=True)
 
     resp = client.get(reverse("catalog:list"))
     assert resp.status_code == 200
 
     cats = list(resp.context["categories"])
     assert cats == [root2, root1]
+    assert root3 not in cats
 
 
 def test_catalog_category_detail_404_for_inactive_category(client):
@@ -54,3 +58,17 @@ def test_catalog_category_detail_shows_only_active_products_in_category(client):
 
     products = list(resp.context["products"])
     assert products == [active_p]
+
+
+def test_catalog_category_detail_includes_products_from_active_subcategories(client):
+    root = Category.objects.create(name="Women", is_active=True)
+    child = Category.objects.create(name="Dresses", parent=root, is_active=True)
+    product = Product.objects.create(name="Silk Dress", brand="Prada", price="10.00", is_active=True)
+
+    ProductCategory.objects.create(product=product, category=child, is_primary=True)
+
+    resp = client.get(reverse("catalog:category", kwargs={"slug": root.slug}))
+    assert resp.status_code == 200
+
+    products = list(resp.context["products"])
+    assert products == [product]

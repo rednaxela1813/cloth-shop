@@ -7,8 +7,12 @@ DEBUG = env_bool("DEBUG", default=False)
 # Serve collected static files via WhiteNoise when running behind gunicorn.
 MIDDLEWARE = [MIDDLEWARE[0], "whitenoise.middleware.WhiteNoiseMiddleware", *MIDDLEWARE[1:]]
 STATICFILES_DIRS = [BASE_DIR / "theme" / "static"]
+_default_storage = {
+    "BACKEND": MEDIA_STORAGE_BACKEND,
+    "OPTIONS": MEDIA_STORAGE_OPTIONS,
+}
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": _default_storage,
     # Use compressed static storage in production-like local runs to avoid
     # collectstatic failures on missing third-party source maps.
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},

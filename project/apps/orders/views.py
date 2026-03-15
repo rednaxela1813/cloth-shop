@@ -39,6 +39,19 @@ def checkout_view(request):
         country=form.data.get("country") if form.is_bound else form.initial.get("country"),
     )
     order_total_preview = cart.subtotal + shipping_cost_preview
+    field_error_names = [
+        "full_name",
+        "email",
+        "phone",
+        "country",
+        "shipping_method",
+        "region",
+        "city",
+        "postal_code",
+        "address_line1",
+        "address_line2",
+    ]
+    has_field_errors = any(form[name].errors for name in field_error_names)
 
     return render(
         request,
@@ -47,6 +60,7 @@ def checkout_view(request):
             "cart": cart,
             "items": items,
             "form": form,
+            "has_field_errors": has_field_errors,
             "shipping_cost_preview": shipping_cost_preview,
             "order_total_preview": order_total_preview,
         },
