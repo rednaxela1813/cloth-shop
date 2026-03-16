@@ -21,10 +21,10 @@
                   {% elif cover.image_url %}
                     <img src="{{ cover.image_url }}" alt="{{ item.variant.product.name }}" class="h-full w-full object-cover">
                   {% else %}
-                    <div class="grid h-full place-items-center text-[10px] text-zinc-500">No image</div>
+                    <div class="grid h-full place-items-center text-[10px] text-zinc-500">Žiadny obrázok</div>
                   {% endif %}
                 {% else %}
-                  <div class="grid h-full place-items-center text-[10px] text-zinc-500">No image</div>
+                  <div class="grid h-full place-items-center text-[10px] text-zinc-500">Žiadny obrázok</div>
                 {% endif %}
               {% endwith %}
             </div>
@@ -43,11 +43,11 @@
               value="{{ item.quantity }}"
               class="w-20 border rounded px-2 py-1"
             />
-            <button type="submit" class="text-sm underline">Update</button>
+            <button type="submit" class="text-sm underline">Aktualizovať</button>
           </form>
           <form method="post" action="{% url 'cart:remove' item.variant.public_id %}">
             {% csrf_token %}
-            <button type="submit" class="text-sm underline">Remove</button>
+            <button type="submit" class="text-sm underline">Odstrániť</button>
           </form>
           <div class="font-medium">€{{ item.subtotal }}</div>
         </div>
@@ -58,19 +58,19 @@
       <div class="text-lg font-semibold">Subtotal: €{{ cart.subtotal }}</div>
       <div class="flex items-center gap-4">
         <a href="{% url 'products:list' %}" class="inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
-          Вернуться в магазин
+          Vrátiť sa do obchodu
         </a>
         <a href="{% url 'orders:checkout' %}" class="inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
-          Checkout
+          Pokladňa
         </a>
         <form method="post" action="{% url 'cart:clear' %}">
           {% csrf_token %}
-          <button type="submit" class="text-sm underline">Clear cart</button>
+          <button type="submit" class="text-sm underline">Vymazať košík</button>
         </form>
       </div>
     </div>
   {% else %}
-    <p>Your cart is empty.</p>
+    <p>Váš košík je prázdny.</p>
   {% endif %}
 </div>
 {% endblock %}

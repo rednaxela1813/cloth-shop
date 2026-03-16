@@ -13,9 +13,9 @@
             <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <p class="font-medium">
                 {% if form.non_field_errors and not has_field_errors %}
-                  Проверьте сообщение ниже.
+                  Skontrolujte správu nižšie.
                 {% else %}
-                  Проверьте выделенные поля ниже.
+                  Skontrolujte zvýraznené polia nižšie.
                 {% endif %}
               </p>
               {% if form.non_field_errors %}
@@ -37,7 +37,7 @@
             </div>
           {% endif %}
           <div>
-            <label class="block text-sm font-medium">Full name</label>
+            <label class="block text-sm font-medium">Celé meno</label>
             {{ form.full_name }}
             {% if form.full_name.errors %}
               <div id="full-name-error" class="text-xs text-red-600 mt-1">{{ form.full_name.errors|striptags }}</div>
@@ -51,56 +51,56 @@
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Phone</label>
+            <label class="block text-sm font-medium">Telefón</label>
             {{ form.phone }}
             {% if form.phone.errors %}
               <div id="phone-error" class="text-xs text-red-600 mt-1">{{ form.phone.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Country (2-letter)</label>
+            <label class="block text-sm font-medium">Krajina (2-písmenný kód)</label>
             {{ form.country }}
             {% if form.country.errors %}
               <div id="country-error" class="text-xs text-red-600 mt-1">{{ form.country.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Shipping method</label>
+            <label class="block text-sm font-medium">Spôsob doručenia</label>
             {{ form.shipping_method }}
             {% if form.shipping_method.errors %}
               <div id="shipping-method-error" class="text-xs text-red-600 mt-1">{{ form.shipping_method.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Region</label>
+            <label class="block text-sm font-medium">Región</label>
             {{ form.region }}
             {% if form.region.errors %}
               <div id="region-error" class="text-xs text-red-600 mt-1">{{ form.region.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">City</label>
+            <label class="block text-sm font-medium">Mesto</label>
             {{ form.city }}
             {% if form.city.errors %}
               <div id="city-error" class="text-xs text-red-600 mt-1">{{ form.city.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Postal code</label>
+            <label class="block text-sm font-medium">PSČ</label>
             {{ form.postal_code }}
             {% if form.postal_code.errors %}
               <div id="postal-code-error" class="text-xs text-red-600 mt-1">{{ form.postal_code.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Address line 1</label>
+            <label class="block text-sm font-medium">Adresa 1</label>
             {{ form.address_line1 }}
             {% if form.address_line1.errors %}
               <div id="address-line1-error" class="text-xs text-red-600 mt-1">{{ form.address_line1.errors|striptags }}</div>
             {% endif %}
           </div>
           <div>
-            <label class="block text-sm font-medium">Address line 2</label>
+            <label class="block text-sm font-medium">Adresa 2</label>
             {{ form.address_line2 }}
             {% if form.address_line2.errors %}
               <div id="address-line2-error" class="text-xs text-red-600 mt-1">{{ form.address_line2.errors|striptags }}</div>
@@ -108,13 +108,13 @@
           </div>
 
           <button type="submit" class="mt-4 inline-flex items-center rounded-full border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50">
-            Place order
+            Odoslať objednávku
           </button>
         </form>
       </div>
 
       <div class="border rounded-xl p-4">
-        <h2 class="text-lg font-semibold mb-4">Order summary</h2>
+        <h2 class="text-lg font-semibold mb-4">Sumár objednávky</h2>
         <div class="space-y-2">
           {% for item in items %}
             <div class="flex justify-between text-sm">
@@ -124,21 +124,21 @@
           {% endfor %}
         </div>
         <div class="mt-4 flex justify-between font-semibold">
-          <span>Subtotal</span>
+          <span>Medzisúčet</span>
           <span>€{{ cart.subtotal }}</span>
         </div>
         <div class="mt-2 flex justify-between text-sm text-zinc-700">
-          <span>Shipping</span>
+          <span>Doprava</span>
           <span>€{{ shipping_cost_preview }}</span>
         </div>
         <div class="mt-2 flex justify-between font-semibold">
-          <span>Total</span>
+          <span>Celkom</span>
           <span>€{{ order_total_preview }}</span>
         </div>
       </div>
     </div>
   {% else %}
-    <p>Your cart is empty.</p>
+    <p>Váš košík je prázdny.</p>
   {% endif %}
 </div>
 {% endblock %}

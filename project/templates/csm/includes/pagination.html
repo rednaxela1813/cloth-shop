@@ -9,18 +9,18 @@
         class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
         aria-label="Previous page"
       >
-        ← Prev
+        ← Predchádzajúce
       </a>
     {% else %}
       <span class="rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-zinc-400">
-        ← Prev
+        ← Predchádzajúce
       </span>
     {% endif %}
 
     {# Current #}
     <span class="px-3 py-2 text-zinc-600">
-      Page <span class="font-medium text-zinc-900">{{ page_obj.number }}</span>
-      of <span class="font-medium text-zinc-900">{{ page_obj.paginator.num_pages }}</span>
+      Strana <span class="font-medium text-zinc-900">{{ page_obj.number }}</span>
+      z <span class="font-medium text-zinc-900">{{ page_obj.paginator.num_pages }}</span>
     </span>
 
     {# Next #}
@@ -30,11 +30,11 @@
         class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50"
         aria-label="Next page"
       >
-        Next →
+        Ďalšia →
       </a>
     {% else %}
       <span class="rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-zinc-400">
-        Next →
+        Ďalšia →
       </span>
     {% endif %}
   </nav>
