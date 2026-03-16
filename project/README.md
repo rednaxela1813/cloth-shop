@@ -43,6 +43,7 @@ Production build now also runs `scripts/build_tailwind.sh`, so VPS runtime uses 
 ### 0) Prepare production env file
 
 Create `project/.env.prod` (separate from `.env` used in development).
+You can start from [`deploy/env.prod.template`](./deploy/env.prod.template).
 
 ### 1) Build and start prod stack
 
@@ -176,6 +177,7 @@ pytest
 ```
 
 `scripts/check_architecture.py` validates layer boundaries for `orders`, `catalog`, and `products`.
+`scripts/check_prod_env.py` validates production env structure before deploy.
 
 ## Tailwind in production
 

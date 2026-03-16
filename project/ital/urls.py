@@ -18,6 +18,7 @@ sitemaps = {
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("healthz", healthz_view),
     path("healthz/", healthz_view, name="healthz"),
 
     # ✅ глобальный alias для reverse("home")
@@ -36,10 +37,9 @@ urlpatterns = [
     path("sitemap.xml", django_sitemap_view, {"sitemaps": sitemaps}, name="sitemap"),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and "debug_toolbar" in settings.INSTALLED_APPS:
     urlpatterns += [
         path("__reload__/", include("django_browser_reload.urls")),
         path("__debug__/", include("debug_toolbar.urls")),
     ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

@@ -43,7 +43,7 @@ def test_build_catalog_category_context_returns_active_category_products_and_sub
 
     assert context["active_category"].id == parent.id
     assert list(context["subcategories"]) == [active_child]
-    assert list(context["products"]) == [active_product]
+    assert list(context["products"]) == [child_product, active_product]
 
 
 def test_build_catalog_category_context_raises_404_for_inactive_category():

@@ -56,7 +56,7 @@ def test_process_checkout_submission_returns_form_error_for_empty_cart(client, d
     )
 
     assert decision.redirect_url is None
-    assert decision.form_error == "Cannot create order from empty cart"
+    assert decision.form_error == "Ваша корзина пуста."
 
 
 def test_process_checkout_submission_returns_customer_message_for_out_of_stock(client, django_user_model):

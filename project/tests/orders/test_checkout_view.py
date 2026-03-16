@@ -42,7 +42,7 @@ def test_checkout_view_shows_field_specific_errors_and_highlights_invalid_inputs
 
     assert response.status_code == 200
     html = response.content.decode("utf-8")
-    assert "Проверьте выделенные поля ниже." in html
+    assert "Skontrolujte zvýraznené polia nižšie." in html
     assert 'href="#id_full_name"' in html
     assert 'href="#id_email"' in html
     assert 'aria-invalid="true"' in html

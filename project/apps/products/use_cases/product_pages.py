@@ -85,6 +85,10 @@ def build_product_list_context(*, request, page_size: int) -> dict:
     page_obj = paginator.get_page(page_number)
     query_params = request.GET.copy()
     query_params.pop("page", None)
+    product_cards = [
+        build_product_card_payload(product=product, request=request)
+        for product in page_obj.object_list
+    ]
     brands = (
         Product.objects.filter(is_active=True)
         .exclude(brand="")
@@ -95,6 +99,7 @@ def build_product_list_context(*, request, page_size: int) -> dict:
 
     return {
         "page_obj": page_obj,
+        "product_cards": product_cards,
         "products_count": paginator.count,
         "brands": brands,
         "selected_brand": selected_brand,

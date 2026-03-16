@@ -415,6 +415,7 @@ class ProductImage(models.Model):
         from apps.products.services.product_image_service import process_product_image_after_save
 
         process_product_image_after_save(self)
+        self.product.__dict__.pop("primary_image", None)
 
 
 class Category(models.Model):

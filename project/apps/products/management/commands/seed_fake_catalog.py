@@ -208,12 +208,12 @@ class Command(BaseCommand):
         if remaining_categories <= 0 or minimum_children_per_root <= 0:
             return remaining_categories
 
-        for root in roots:
-            if remaining_categories <= 0:
-                break
+        created_rounds = 0
+        while remaining_categories > 0 and created_rounds < minimum_children_per_root:
+            for root in roots:
+                if remaining_categories <= 0:
+                    break
 
-            children_to_create = min(minimum_children_per_root, remaining_categories)
-            for _ in range(children_to_create):
                 child = self._create_child_category(
                     fake=fake,
                     root=root,
@@ -222,8 +222,7 @@ class Command(BaseCommand):
                 child_categories_by_root_id[root.id].append(child)
                 all_categories.append(child)
                 remaining_categories -= 1
-                if remaining_categories <= 0:
-                    break
+            created_rounds += 1
 
         return remaining_categories
 
