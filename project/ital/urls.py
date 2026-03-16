@@ -18,7 +18,7 @@ sitemaps = {
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("healthz", healthz_view, name="healthz"),
+    path("healthz/", healthz_view, name="healthz"),
 
     # ✅ глобальный alias для reverse("home")
     path("", home_view, name="home"),
@@ -39,5 +39,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += [
         path("__reload__/", include("django_browser_reload.urls")),
+        path("__debug__/", include("debug_toolbar.urls")),
     ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

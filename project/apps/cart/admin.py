@@ -1,5 +1,6 @@
 # apps/cart/admin.py
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import Cart, CartItem
 
@@ -11,6 +12,8 @@ class CartItemInline(admin.TabularInline):
     can_delete = False
     fields = ("variant", "quantity", "created", "updated")
     readonly_fields = ("created", "updated")
+    verbose_name = _("Položka košíka")
+    verbose_name_plural = _("Položky košíka")
 
 
 @admin.register(Cart)

@@ -5,6 +5,7 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class ProductQuerySet(models.QuerySet):
@@ -427,6 +428,19 @@ class Category(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    
+    cover_image = models.ImageField(
+        upload_to="category_covers/",
+        blank=True,
+        null=True,
+        verbose_name=_("Titulný obrázok"),
+    )
+
+    cover_image_url = models.URLField(
+        blank=True,
+        default="",
+        verbose_name=_("Externá URL titulného obrázka"),
+    )
 
     objects = CategoryQuerySet.as_manager()
 
@@ -439,6 +453,12 @@ class Category(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def resolved_cover_image_url(self) -> str:
+        if self.cover_image:
+            return self.cover_image.url
+        return self.cover_image_url or ""
 
     def self_and_descendants(self):
         """

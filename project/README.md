@@ -36,6 +36,7 @@ docker compose -f docker-compose.prod.yml up --build
 ```
 
 `Dockerfile` defaults to production runtime (`gunicorn` + `collectstatic`), while `docker-compose.yml` overrides command/settings for dev workflow.
+Production build now also runs `scripts/build_tailwind.sh`, so VPS runtime uses a freshly generated Tailwind bundle and does not depend on a local dev watcher.
 
 ## Go-Live Runbook
 
@@ -175,6 +176,22 @@ pytest
 ```
 
 `scripts/check_architecture.py` validates layer boundaries for `orders`, `catalog`, and `products`.
+
+## Tailwind in production
+
+Production does not use `python manage.py tailwind start`.
+
+Instead:
+
+1. `scripts/build_tailwind.sh` builds `theme/static/css/dist/styles.css`
+2. `collectstatic` collects that generated file
+3. the site serves the compiled CSS from static files
+
+Manual build if needed:
+
+```bash
+sh scripts/build_tailwind.sh
+```
 
 ## Payment Runbook
 

@@ -61,8 +61,8 @@
     </div>
 
     <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-      {% for product in trending_products %}
-        {% include "csm/components/product_card.html" with product=product cta_mode="details" %}
+      {% for card in trending_product_cards %}
+        {% include "csm/components/product_card.html" with card=card %}
       {% empty %}
         <div class="col-span-full rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-600">
           Zatiaľ tu nie sú žiadne produkty.

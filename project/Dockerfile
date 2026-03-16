@@ -14,6 +14,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
+RUN sh scripts/build_tailwind.sh
 
 EXPOSE 8000
 

@@ -1,6 +1,11 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import ContactMessage
+
+admin.site.site_header = _("Administrácia Italian Luxury Clothing")
+admin.site.site_title = _("Administrácia ILC")
+admin.site.index_title = _("Správa obsahu")
 
 
 @admin.register(ContactMessage)

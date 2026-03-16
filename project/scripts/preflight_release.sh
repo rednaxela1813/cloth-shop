@@ -9,6 +9,9 @@ fi
 echo "==> Preflight: Django deploy checks"
 DJANGO_SETTINGS_MODULE=ital.settings.prod python manage.py check --deploy
 
+echo "==> Preflight: Tailwind build"
+sh scripts/build_tailwind.sh
+
 echo "==> Preflight: architecture boundaries"
 python scripts/check_architecture.py
 

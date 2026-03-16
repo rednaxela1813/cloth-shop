@@ -3,6 +3,7 @@ from django.forms import modelform_factory
 from django.contrib import admin
 from django.db.models import Prefetch
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from apps.seo.models import SeoMeta
 from .models import Category, Product, ProductCategory, ProductImage, ProductVariant, VariantImage
 
@@ -12,7 +13,7 @@ class AdminImagePreviewMixin:
 
     def _render_image_preview(self, field_file):
         if not field_file:
-            return "No image"
+            return _("Bez obrázka")
         return format_html(
             '<img src="{}" alt="" style="max-width: {}px; max-height: {}px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;" />',
             field_file.url,
@@ -40,15 +41,15 @@ class ProductImageInline(admin.TabularInline):
     readonly_fields = ("image_original_preview", "image_card_preview", "image_thumb_preview")
     ordering = ("sort_order", "id")
 
-    @admin.display(description="Original preview")
+    @admin.display(description=_("Náhľad originálu"))
     def image_original_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_original)
 
-    @admin.display(description="Card preview")
+    @admin.display(description=_("Náhľad karty"))
     def image_card_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_card)
 
-    @admin.display(description="Thumb preview")
+    @admin.display(description=_("Náhľad miniatúry"))
     def image_thumb_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_thumb)
 
@@ -88,29 +89,29 @@ class VariantImageInline(admin.TabularInline):
     readonly_fields = ("image_original_preview", "image_card_preview", "image_thumb_preview")
     ordering = ("sort_order", "id")
 
-    @admin.display(description="Original preview")
+    @admin.display(description=_("Náhľad originálu"))
     def image_original_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_original)
 
-    @admin.display(description="Card preview")
+    @admin.display(description=_("Náhľad karty"))
     def image_card_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_card)
 
-    @admin.display(description="Thumb preview")
+    @admin.display(description=_("Náhľad miniatúry"))
     def image_thumb_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_thumb)
 
 
 class SeoMetaFormMixin:
     def _add_seo_fields(self):
-        self.fields["seo_title"] = forms.CharField(label="SEO title", max_length=255, required=False)
+        self.fields["seo_title"] = forms.CharField(label=_("SEO titulok"), max_length=255, required=False)
         self.fields["seo_description"] = forms.CharField(
-            label="SEO description",
+            label=_("SEO popis"),
             required=False,
             widget=forms.Textarea(attrs={"rows": 3}),
         )
-        self.fields["seo_keywords"] = forms.CharField(label="SEO keywords", max_length=512, required=False)
-        self.fields["seo_og_image"] = forms.ImageField(label="SEO OG image", required=False)
+        self.fields["seo_keywords"] = forms.CharField(label=_("SEO kľúčové slová"), max_length=512, required=False)
+        self.fields["seo_og_image"] = forms.ImageField(label=_("SEO OG obrázok"), required=False)
 
     def _init_seo_fields(self):
         seo = getattr(self.instance, "seo_meta", None)
@@ -180,8 +181,8 @@ class ProductAdmin(AdminImagePreviewMixin, SeoMetaAdminMixin, admin.ModelAdmin):
     inlines = [ProductCategoryInline, ProductImageInline, ProductVariantInline]
     fieldsets = (
         (None, {"fields": ("name", "slug", "brand", "origin_country", "description", "details")}),
-        ("Status", {"fields": ("is_active", "is_trending")}),
-        ("SEO", {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image", "seo_og_image_preview")}),
+        (_("Stav"), {"fields": ("is_active", "is_trending")}),
+        (_("SEO"), {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image", "seo_og_image_preview")}),
     )
     readonly_fields = ("seo_og_image_preview",)
 
@@ -202,11 +203,11 @@ class ProductAdmin(AdminImagePreviewMixin, SeoMetaAdminMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         form._save_seo_fields(obj)
 
-    @admin.display(description="Price")
+    @admin.display(description=_("Cena"))
     def display_price_admin(self, obj):
         return obj.display_price
 
-    @admin.display(description="Current OG image")
+    @admin.display(description=_("Aktuálny OG obrázok"))
     def seo_og_image_preview(self, obj):
         seo = getattr(obj, "seo_meta", None)
         return self._render_image_preview(seo.og_image if seo else None)
@@ -228,8 +229,8 @@ class CategoryChildInline(admin.TabularInline):
     model = Category
     fk_name = "parent"
     extra = 1
-    verbose_name = "Subcategory"
-    verbose_name_plural = "Subcategories"
+    verbose_name = _("Podkategória")
+    verbose_name_plural = _("Podkategórie")
     fields = ("name", "is_active", "sort_order")
     ordering = ("sort_order", "name", "id")
     show_change_link = True
@@ -242,8 +243,10 @@ class CategoryAdminForm(SeoMetaFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["parent"].label = "Parent category"
-        self.fields["parent"].help_text = "Leave empty for a top-level category. Select a parent only when creating a subcategory."
+        self.fields["parent"].label = _("Nadradená kategória")
+        self.fields["parent"].help_text = _(
+            "Nechajte prázdne pre hlavnú kategóriu. Nadradenú kategóriu vyberte len pri vytváraní podkategórie."
+        )
         parent_queryset = self.fields["parent"].queryset.order_by("name", "id")
         if self.instance and self.instance.pk:
             parent_queryset = parent_queryset.exclude(pk=self.instance.pk)
@@ -255,7 +258,7 @@ class CategoryAdminForm(SeoMetaFormMixin, forms.ModelForm):
 @admin.register(Category)
 class CategoryAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
     form = CategoryAdminForm
-    list_display = ("name", "parent", "is_active", "sort_order", "created")
+    list_display = ("name", "parent", "is_active", "cover_image", "cover_image_url", "sort_order", "created")
     list_filter = ("is_active",)
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
@@ -263,7 +266,8 @@ class CategoryAdmin(SeoMetaAdminMixin, admin.ModelAdmin):
     list_select_related = ("parent",)
     fieldsets = (
         (None, {"fields": ("name", "slug", "parent", "is_active", "sort_order")}),
-        ("SEO", {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image")}),
+        (_("Titulný obrázok"), {"fields": ("cover_image", "cover_image_url")}),
+        (_("SEO"), {"fields": ("seo_title", "seo_description", "seo_keywords", "seo_og_image")}),
     )
 
     def save_model(self, request, obj, form, change):

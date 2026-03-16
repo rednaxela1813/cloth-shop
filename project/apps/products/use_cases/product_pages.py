@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
+from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.products.models import Product, ProductImage, ProductVariant
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
 from apps.products.services.product_variant_presenter import build_active_variants_payload
@@ -133,6 +134,10 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
         if product.brand
         else Product.objects.none()
     )
+    related_product_cards = [
+        build_product_card_payload(product=related_product, request=request)
+        for related_product in related_products
+    ]
     active_variants, selected_variant, variant_payload = build_active_variants_payload(product=product)
 
     return ProductDetailResult(
@@ -143,6 +148,7 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
             "images": images,
             "primary_image": primary_image,
             "related_products": related_products,
+            "related_product_cards": related_product_cards,
             "delivery_eta_label": get_delivery_eta_label(),
             "return_window_label": get_return_window_label(),
             "absolute_url": absolute_url,

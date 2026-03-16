@@ -4,6 +4,7 @@ from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.products.models import Category, Product, ProductImage, ProductVariant
 from apps.shipping.services import get_return_window_days
 from .forms import ContactMessageForm
@@ -13,30 +14,14 @@ def healthz_view(request):
     return HttpResponse("ok", content_type="text/plain")
 
 
-def _random_category_cover_url(*, category_slug: str) -> str:
-    image = (
-        ProductImage.objects.filter(
-            product__is_active=True,
-            product__categories__slug=category_slug,
-            product__categories__is_active=True,
-        )
-        .distinct()
-        .order_by("?")
-        .first()
-    )
-    if not image:
-        return ""
-    if image.image_card:
-        return image.image_card.url
-    if image.image_thumb:
-        return image.image_thumb.url
-    if image.image_original:
-        return image.image_original.url
-    return image.image_url or ""
+def _category_cover_urls(*, slugs: tuple[str, ...]) -> dict[str, str]:
+    categories = Category.objects.active().filter(slug__in=slugs)
+    return {category.slug: category.resolved_cover_image_url for category in categories}
 
 
 def home_view(request):
     categories = Category.objects.roots()
+    category_cover_urls = _category_cover_urls(slugs=("women", "men", "sale"))
 
     selected_category_slug = (request.GET.get("category") or "").strip()
     selected_subcategory_slug = (request.GET.get("subcategory") or "").strip()
@@ -75,6 +60,10 @@ def home_view(request):
             )
         )[:8]
     )
+    trending_product_cards = [
+        build_product_card_payload(product=product, request=request, cta_mode="details")
+        for product in trending_products
+    ]
 
     context = {
         "title": "Italian Luxury Clothing",
@@ -85,9 +74,10 @@ def home_view(request):
         "selected_category_slug": selected_category.slug if selected_category else "",
         "selected_subcategory_slug": selected_subcategory.slug if selected_subcategory else "",
         "trending_products": trending_products,
-        "women_tile_image_url": _random_category_cover_url(category_slug="women"),
-        "men_tile_image_url": _random_category_cover_url(category_slug="men"),
-        "sale_tile_image_url": _random_category_cover_url(category_slug="sale"),
+        "trending_product_cards": trending_product_cards,
+        "women_tile_image_url": category_cover_urls.get("women", ""),
+        "men_tile_image_url": category_cover_urls.get("men", ""),
+        "sale_tile_image_url": category_cover_urls.get("sale", ""),
     }
     return render(request, "csm/pages/home.html", context)
 

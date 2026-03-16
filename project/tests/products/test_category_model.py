@@ -38,3 +38,12 @@ def test_cannot_delete_parent_category_if_has_children():
 
     with pytest.raises(IntegrityError):
         parent.delete()
+
+
+def test_category_resolved_cover_image_url_prefers_external_url():
+    category = Category.objects.create(
+        name="Women",
+        cover_image_url="https://example.com/women-cover.webp",
+    )
+
+    assert category.resolved_cover_image_url == "https://example.com/women-cover.webp"

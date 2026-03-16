@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import Address, Order, OrderItem, OrderStatusEvent, Payment, PaymentStatusEvent
 
@@ -49,6 +50,11 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ("status",)
     inlines = [OrderItemInline, PaymentInline, OrderStatusEventInline]
     list_select_related = ("shipping_address", "user")
+
+    fieldsets = (
+        (None, {"fields": ("public_id", "user", "email", "status", "shipping_method", "currency", "subtotal", "shipping_cost", "total", "created", "updated")}),
+    )
+    readonly_fields = ("public_id", "user", "email", "status", "shipping_method", "currency", "subtotal", "shipping_cost", "total", "created", "updated")
 
     def has_delete_permission(self, request, obj=None):
         return False
