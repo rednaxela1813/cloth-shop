@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Cart(models.Model):
@@ -15,14 +16,17 @@ class Cart(models.Model):
         related_name="carts",
         null=True,
         blank=True,
+        verbose_name=_("Používateľ"),
     )
-    session_key = models.CharField(max_length=40, null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True, verbose_name=_("Kľúč relácie"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Aktívny"))
 
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name=_("Vytvorené"))
+    updated = models.DateTimeField(auto_now=True, verbose_name=_("Aktualizované"))
 
     class Meta:
+        verbose_name = _("Košík")
+        verbose_name_plural = _("Košíky")
         constraints = [
             # One active cart per user.
             models.UniqueConstraint(
@@ -58,14 +62,16 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     """One unique product variant line inside a cart."""
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    variant = models.ForeignKey("products.ProductVariant", on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField(default=1)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items", verbose_name=_("Košík"))
+    variant = models.ForeignKey("products.ProductVariant", on_delete=models.PROTECT, verbose_name=_("Variant"))
+    quantity = models.PositiveIntegerField(default=1, verbose_name=_("Množstvo"))
 
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name=_("Vytvorené"))
+    updated = models.DateTimeField(auto_now=True, verbose_name=_("Aktualizované"))
 
     class Meta:
+        verbose_name = _("Položka košíka")
+        verbose_name_plural = _("Položky košíka")
         constraints = [
             models.UniqueConstraint(
                 fields=["cart", "variant"],

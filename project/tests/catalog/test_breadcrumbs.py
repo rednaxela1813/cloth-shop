@@ -25,6 +25,8 @@ def test_catalog_category_has_breadcrumbs(client):
     /catalog/<slug>/ должен показывать: Home -> Catalog -> Category
     """
     cat = Category.objects.create(name="Shoes", is_active=True)
+    product = Product.objects.create(name="Derby", brand="Test", price="10.00", is_active=True)
+    ProductCategory.objects.create(product=product, category=cat, is_primary=True)
     url = reverse("catalog:category", kwargs={"slug": cat.slug})
     resp = client.get(url)
     assert resp.status_code == 200

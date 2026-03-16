@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import ContactMessage, MESSENGER_CHOICES
 
@@ -7,8 +8,8 @@ class ContactMessageForm(forms.ModelForm):
     consent = forms.BooleanField(
         required=True,
         label=(
-            "Súhlasím so spracovaním osobných údajov podľa pravidiel EÚ "
-            "na účely odpovede na moju správu."
+            _("Súhlasím so spracovaním osobných údajov podľa pravidiel EÚ "
+            "na účely odpovede na moju správu.")
         ),
     )
 
@@ -32,13 +33,18 @@ class ContactMessageForm(forms.ModelForm):
             "focus:outline-none focus:ring-2 focus:ring-zinc-900"
         )
         self.fields["name"].required = False
+        self.fields["name"].label = _("Meno")
         self.fields["name"].widget.attrs["class"] = base_classes
-        self.fields["name"].widget.attrs["placeholder"] = "Ricotti customer"
+        self.fields["name"].widget.attrs["placeholder"] = _("Zákazník Ricotti")
+        self.fields["email"].label = _("E-mail")
         self.fields["email"].widget.attrs["class"] = base_classes
         self.fields["email"].widget.attrs["placeholder"] = "vas@email.sk"
+        self.fields["messenger_type"].label = _("Typ messengera")
         self.fields["messenger_type"].widget.attrs["class"] = base_classes
+        self.fields["messenger_handle"].label = _("Kontakt na messenger")
         self.fields["messenger_handle"].widget.attrs["class"] = base_classes
         self.fields["messenger_handle"].widget.attrs["placeholder"] = "@username alebo +421..."
+        self.fields["message"].label = _("Správa")
         self.fields["message"].widget.attrs["class"] = f"{base_classes} resize-none"
         self.fields["consent"].widget.attrs["class"] = (
             "mt-0.5 h-4 w-4 rounded border border-zinc-300 text-zinc-900 focus:ring-zinc-900"

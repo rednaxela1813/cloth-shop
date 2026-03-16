@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.cart.services import get_or_create_cart
+from apps.shipping.services import calculate_shipping_cost, normalize_shipping_method
 from .forms import CheckoutForm
 from .use_cases.checkout import build_checkout_initial, process_checkout_submission
 from .use_cases.handle_stripe_webhook import process_stripe_webhook
@@ -29,6 +30,29 @@ def checkout_view(request):
     else:
         form = CheckoutForm(initial=build_checkout_initial(request))
 
+    selected_shipping_method = normalize_shipping_method(
+        form.data.get("shipping_method") if form.is_bound else form.initial.get("shipping_method")
+    )
+    shipping_cost_preview = calculate_shipping_cost(
+        shipping_method=selected_shipping_method,
+        subtotal=cart.subtotal,
+        country=form.data.get("country") if form.is_bound else form.initial.get("country"),
+    )
+    order_total_preview = cart.subtotal + shipping_cost_preview
+    field_error_names = [
+        "full_name",
+        "email",
+        "phone",
+        "country",
+        "shipping_method",
+        "region",
+        "city",
+        "postal_code",
+        "address_line1",
+        "address_line2",
+    ]
+    has_field_errors = any(form[name].errors for name in field_error_names)
+
     return render(
         request,
         "csm/pages/checkout.html",
@@ -36,6 +60,9 @@ def checkout_view(request):
             "cart": cart,
             "items": items,
             "form": form,
+            "has_field_errors": has_field_errors,
+            "shipping_cost_preview": shipping_cost_preview,
+            "order_total_preview": order_total_preview,
         },
     )
 

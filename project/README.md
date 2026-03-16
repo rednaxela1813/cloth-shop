@@ -21,17 +21,74 @@ DJANGO_SETTINGS_MODULE=ital.settings.prod
 
 ## Docker
 
+Run all docker commands from `project/`.
+
 - Dev:
 ```bash
+cd project
 docker compose up --build
 ```
 
 - Prod-like run:
 ```bash
+cd project
 docker compose -f docker-compose.prod.yml up --build
 ```
 
 `Dockerfile` defaults to production runtime (`gunicorn` + `collectstatic`), while `docker-compose.yml` overrides command/settings for dev workflow.
+Production build now also runs `scripts/build_tailwind.sh`, so VPS runtime uses a freshly generated Tailwind bundle and does not depend on a local dev watcher.
+
+## Go-Live Runbook
+
+### 0) Prepare production env file
+
+Create `project/.env.prod` (separate from `.env` used in development).
+
+### 1) Build and start prod stack
+
+```bash
+cd project
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### 2) Apply migrations
+
+```bash
+cd project
+docker compose -f docker-compose.prod.yml exec web python manage.py migrate
+```
+
+### 3) Run release preflight
+
+```bash
+cd project
+docker compose -f docker-compose.prod.yml exec web sh scripts/preflight_release.sh --skip-tests
+```
+
+For full validation (with tests):
+
+```bash
+cd project
+docker compose -f docker-compose.prod.yml exec web sh scripts/preflight_release.sh
+```
+
+### 4) Check health endpoint
+
+```bash
+curl -fsS http://localhost:8000/healthz
+```
+
+Expected response: `ok`
+
+### 5) Create DB backup before/after release
+
+From repository root:
+
+```bash
+./scripts/backup_postgres.sh
+```
+
+Backup file is written to `./backups/`.
 
 ## Stripe payments
 
@@ -53,6 +110,47 @@ Local forwarding example with Stripe CLI:
 
 ```bash
 stripe listen --forward-to localhost:8000/checkout/stripe/webhook/
+```
+
+## Fake catalog seeding
+
+Generate a large fake catalog for local browsing and performance checks:
+
+```bash
+python manage.py seed_fake_catalog --categories 24 --products-per-category 120 --subcategories 4 --variants 3
+```
+
+Useful flags:
+
+```bash
+python manage.py seed_fake_catalog --seed 123
+python manage.py seed_fake_catalog --categories 40 --products-per-category 200
+```
+
+## Load testing
+
+Install Locust in your virtualenv if needed:
+
+```bash
+pip install locust
+```
+
+Run the test suite against local dev server:
+
+```bash
+locust -f loadtests/locustfile.py --host=http://127.0.0.1:8000
+```
+
+Suggested first run:
+
+```bash
+locust -f loadtests/locustfile.py --host=http://127.0.0.1:8000 --users 100 --spawn-rate 10 --run-time 10m --headless
+```
+
+To stress one hot product with stock contention, set a product detail path:
+
+```bash
+HOT_PRODUCT_PATH=/shop/<public_id>/<slug>/ locust -f loadtests/locustfile.py --host=http://127.0.0.1:8000 --users 100 --spawn-rate 20 --run-time 5m --headless
 ```
 
 ## Prod Profile Checklist
@@ -78,6 +176,22 @@ pytest
 ```
 
 `scripts/check_architecture.py` validates layer boundaries for `orders`, `catalog`, and `products`.
+
+## Tailwind in production
+
+Production does not use `python manage.py tailwind start`.
+
+Instead:
+
+1. `scripts/build_tailwind.sh` builds `theme/static/css/dist/styles.css`
+2. `collectstatic` collects that generated file
+3. the site serves the compiled CSS from static files
+
+Manual build if needed:
+
+```bash
+sh scripts/build_tailwind.sh
+```
 
 ## Payment Runbook
 

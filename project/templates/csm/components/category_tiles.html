@@ -18,6 +18,12 @@
       href="{% url 'catalog:category' slug='women' %}"
       class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white"
     >
+      {% if women_tile_image_url %}
+        <div
+          class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+          style="background-image: url('{{ women_tile_image_url }}');"
+        ></div>
+      {% endif %}
       <div
         class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/10"
       ></div>
@@ -45,7 +51,7 @@
       </div>
 
       <div
-        class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"
+        class="h-40 {% if not women_tile_image_url %}bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]{% endif %}"
       ></div>
     </a>
 
@@ -53,6 +59,12 @@
       href="{% url 'catalog:category' slug='men' %}"
       class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-yellow-200"
     >
+      {% if men_tile_image_url %}
+        <div
+          class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+          style="background-image: url('{{ men_tile_image_url }}');"
+        ></div>
+      {% endif %}
       <div
         class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40"
       ></div>
@@ -80,7 +92,7 @@
       </div>
 
       <div
-        class="h-40 bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]"
+        class="h-40 {% if not men_tile_image_url %}bg-[linear-gradient(135deg,rgba(24,24,27,0.06),rgba(24,24,27,0.0))]{% endif %}"
       ></div>
     </a>
 
@@ -88,6 +100,12 @@
       href="{% url 'catalog:category' slug='sale' %}"
       class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-900"
     >
+      {% if sale_tile_image_url %}
+        <div
+          class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+          style="background-image: url('{{ sale_tile_image_url }}');"
+        ></div>
+      {% endif %}
       <div
         class="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-black/30"
       ></div>
@@ -114,7 +132,7 @@
       </div>
 
       <div
-        class="h-40 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.0)_55%)]"
+        class="h-40 {% if not sale_tile_image_url %}bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.0)_55%)]{% endif %}"
       ></div>
     </a>
   </div>

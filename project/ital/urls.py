@@ -9,7 +9,7 @@ from django.contrib.sitemaps.views import sitemap as django_sitemap_view
 from apps.seo.sitemaps import StaticViewSitemap, ActiveProductSitemap
 from apps.seo.views import robots_txt
 
-from apps.csm.views import home_view  # ✅ добавь импорт
+from apps.csm.views import healthz_view, home_view  # ✅ добавь импорт
 
 sitemaps = {
     "static": StaticViewSitemap,
@@ -18,6 +18,7 @@ sitemaps = {
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("healthz/", healthz_view, name="healthz"),
 
     # ✅ глобальный alias для reverse("home")
     path("", home_view, name="home"),
@@ -25,6 +26,7 @@ urlpatterns = [
     # ✅ подключаем остальные страницы csm (help/returns/...)
     path("", include("apps.csm.urls")),
 
+    path("account/", include("apps.accounts.urls")),
     path("cart/", include("apps.cart.urls")),
     path("checkout/", include("apps.orders.urls")),
     path("shop/", include("apps.products.urls")),
@@ -37,5 +39,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += [
         path("__reload__/", include("django_browser_reload.urls")),
+        path("__debug__/", include("debug_toolbar.urls")),
     ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

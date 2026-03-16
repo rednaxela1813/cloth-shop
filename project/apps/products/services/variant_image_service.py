@@ -1,3 +1,4 @@
+# project/apps/products/services/variant_image_service.py
 from __future__ import annotations
 
 

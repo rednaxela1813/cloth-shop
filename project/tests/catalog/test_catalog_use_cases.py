@@ -33,8 +33,10 @@ def test_build_catalog_category_context_returns_active_category_products_and_sub
 
     active_product = Product.objects.create(name="Boot A", price="10.00", is_active=True)
     inactive_product = Product.objects.create(name="Boot B", price="20.00", is_active=False)
+    child_product = Product.objects.create(name="Boot Child", price="15.00", is_active=True)
     ProductCategory.objects.create(product=active_product, category=parent, is_primary=True)
     ProductCategory.objects.create(product=inactive_product, category=parent, is_primary=True)
+    ProductCategory.objects.create(product=child_product, category=active_child, is_primary=True)
 
     request = rf.get(f"/catalog/{parent.slug}/")
     context = build_catalog_category_context(request=request, slug=parent.slug, page_size=12)
