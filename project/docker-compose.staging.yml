@@ -1,21 +1,23 @@
+                   
 services:
   web:
     build:
-      context: .
+      context: ./project
     command: >
+      sh -c "python manage.py collectstatic --noinput &&
       gunicorn ital.wsgi:application
       --bind 0.0.0.0:8000
-      --workers $${GUNICORN_WORKERS:-3}
-      --timeout $${GUNICORN_TIMEOUT:-60}
+      --workers 3
+      --timeout 60"
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.prod
     env_file:
-      - ./.env.prod
+      - /srv/ricotti/env/.env.staging
     ports:
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
     volumes:
-      - ./media:/app/media
+      - /srv/ricotti/media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -26,30 +28,13 @@ services:
       retries: 5
       start_period: 40s
 
-  release:
-    build:
-      context: .
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-      python manage.py collectstatic --noinput"
-    profiles: ["release"]
-    environment:
-      DJANGO_SETTINGS_MODULE: ital.settings.prod
-    env_file:
-      - ./.env.prod
-    volumes:
-      - ./media:/app/media
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
     image: postgres:15-alpine
     env_file:
-      - ./.env.prod
+      - /srv/ricotti/env/.env.staging
     restart: unless-stopped
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /srv/ricotti/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 10s
@@ -57,5 +42,5 @@ services:
       retries: 5
       start_period: 20s
 
-volumes:
-  postgres_data:
+
+
