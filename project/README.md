@@ -35,8 +35,9 @@ cd project
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-`Dockerfile` defaults to production runtime (`gunicorn` + `collectstatic`), while `docker-compose.yml` overrides command/settings for dev workflow.
+`Dockerfile` defaults to production runtime (`gunicorn`), while `docker-compose.yml` overrides command/settings for dev workflow.
 Production build now also runs `scripts/build_tailwind.sh`, so VPS runtime uses a freshly generated Tailwind bundle and does not depend on a local dev watcher.
+`docker-compose.prod.yml` now separates release tasks from runtime: `web` starts only `gunicorn`, and one-off deploy steps run through the `release` service.
 
 ## Go-Live Runbook
 
@@ -49,17 +50,24 @@ You can start from [`deploy/env.prod.template`](./deploy/env.prod.template).
 
 ```bash
 cd project
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build db
 ```
 
-### 2) Apply migrations
+### 2) Run release step (migrations + collectstatic)
 
 ```bash
 cd project
-docker compose -f docker-compose.prod.yml exec web python manage.py migrate
+docker compose -f docker-compose.prod.yml run --rm release
 ```
 
-### 3) Run release preflight
+### 3) Start app container
+
+```bash
+cd project
+docker compose -f docker-compose.prod.yml up -d web
+```
+
+### 4) Run release preflight
 
 ```bash
 cd project
@@ -73,7 +81,7 @@ cd project
 docker compose -f docker-compose.prod.yml exec web sh scripts/preflight_release.sh
 ```
 
-### 4) Check health endpoint
+### 5) Check health endpoint
 
 ```bash
 curl -fsS http://localhost:8000/healthz
@@ -81,7 +89,7 @@ curl -fsS http://localhost:8000/healthz
 
 Expected response: `ok`
 
-### 5) Create DB backup before/after release
+### 6) Create DB backup before/after release
 
 From repository root:
 
