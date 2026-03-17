@@ -1,0 +1,22 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to staging VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_VPS_HOST }}
+          username: ${{ secrets.STAGING_VPS_USER }}
+          key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+          script: |
+            cd /srv/ricotti/app/cloth-shop/project
+            chmod +x deploy_staging.sh
+            ./deploy_staging.sh
