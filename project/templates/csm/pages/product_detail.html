@@ -170,7 +170,7 @@
         </div>
       </div>
 
-      <div class="mt-8 flex flex-wrap gap-3">
+      <div class="mt-8 flex flex-wrap items-end gap-3">
         {% if selected_variant %}
           <form id="variant-cart-form" method="post" action="{% url 'cart:add_by_variant' %}" class="flex flex-wrap items-end gap-3">
             {% csrf_token %}
