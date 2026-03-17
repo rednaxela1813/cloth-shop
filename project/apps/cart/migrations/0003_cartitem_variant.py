@@ -11,10 +11,22 @@ def forwards_fill_variant(apps, schema_editor):
         table_description = connection.introspection.get_table_description(cursor, "products_productvariant")
         variant_columns = {col.name for col in table_description}
         has_public_id = "public_id" in variant_columns
+        has_variant_compare_at = "compare_at" in variant_columns
+
+        product_table_description = connection.introspection.get_table_description(cursor, "products_product")
+        product_columns = {col.name for col in product_table_description}
+        has_product_price = "price" in product_columns
+        has_product_compare_at = "compare_at" in product_columns
+
+        select_columns = ["ci.id", "ci.product_id", "p.is_active"]
+        if has_product_price:
+            select_columns.append("p.price")
+        if has_product_compare_at:
+            select_columns.append("p.compare_at")
 
         cursor.execute(
-            """
-            SELECT ci.id, ci.product_id, p.price, p.compare_at, p.is_active
+            f"""
+            SELECT {", ".join(select_columns)}
             FROM cart_cartitem ci
             JOIN products_product p ON p.id = ci.product_id
             WHERE ci.variant_id IS NULL
@@ -22,7 +34,19 @@ def forwards_fill_variant(apps, schema_editor):
         )
         rows = cursor.fetchall()
 
-        for cartitem_id, product_id, price, compare_at, is_active in rows:
+        for row in rows:
+            offset = 0
+            cartitem_id = row[offset]
+            offset += 1
+            product_id = row[offset]
+            offset += 1
+            is_active = row[offset]
+            offset += 1
+            price = row[offset] if has_product_price else 0
+            if has_product_price:
+                offset += 1
+            compare_at = row[offset] if has_product_compare_at else None
+
             cursor.execute(
                 """
                 SELECT id
@@ -38,25 +62,47 @@ def forwards_fill_variant(apps, schema_editor):
             else:
                 sku = f"LEGACY-{product_id}-{uuid.uuid4().hex[:8]}"
                 if has_public_id:
-                    cursor.execute(
-                        """
-                        INSERT INTO products_productvariant
-                        (public_id, product_id, size, color, sku, price, compare_at, stock, is_active, created, updated)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
-                        RETURNING id
-                        """,
-                        [str(uuid.uuid4()), product_id, "UNI", "Default", sku, price, compare_at, is_active],
-                    )
+                    if has_variant_compare_at:
+                        cursor.execute(
+                            """
+                            INSERT INTO products_productvariant
+                            (public_id, product_id, size, color, sku, price, compare_at, stock, is_active, created, updated)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
+                            RETURNING id
+                            """,
+                            [str(uuid.uuid4()), product_id, "UNI", "Default", sku, price, compare_at, is_active],
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            INSERT INTO products_productvariant
+                            (public_id, product_id, size, color, sku, price, stock, is_active, created, updated)
+                            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
+                            RETURNING id
+                            """,
+                            [str(uuid.uuid4()), product_id, "UNI", "Default", sku, price, is_active],
+                        )
                 else:
-                    cursor.execute(
-                        """
-                        INSERT INTO products_productvariant
-                        (product_id, size, color, sku, price, compare_at, stock, is_active, created, updated)
-                        VALUES (%s, %s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
-                        RETURNING id
-                        """,
-                        [product_id, "UNI", "Default", sku, price, compare_at, is_active],
-                    )
+                    if has_variant_compare_at:
+                        cursor.execute(
+                            """
+                            INSERT INTO products_productvariant
+                            (product_id, size, color, sku, price, compare_at, stock, is_active, created, updated)
+                            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
+                            RETURNING id
+                            """,
+                            [product_id, "UNI", "Default", sku, price, compare_at, is_active],
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            INSERT INTO products_productvariant
+                            (product_id, size, color, sku, price, stock, is_active, created, updated)
+                            VALUES (%s, %s, %s, %s, %s, 0, %s, NOW(), NOW())
+                            RETURNING id
+                            """,
+                            [product_id, "UNI", "Default", sku, price, is_active],
+                        )
                 variant_id = cursor.fetchone()[0]
 
             cursor.execute(

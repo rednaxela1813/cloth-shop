@@ -1,6 +1,12 @@
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from PIL import Image
+import io
+import tempfile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 
+from apps.csm.models import SiteBranding
 from apps.products.models import Category, Product, ProductCategory
 
 
@@ -9,6 +15,32 @@ class HealthzViewTests(SimpleTestCase):
         response = self.client.get("/healthz")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content.decode(), "ok")
+
+
+@override_settings(MEDIA_ROOT=tempfile.gettempdir())
+class SiteBrandingTests(TestCase):
+    def _uploaded_logo(self, *, name="logo.png", size=(640, 640), color=(0, 0, 0, 0)):
+        file_obj = io.BytesIO()
+        image = Image.new("RGBA", size, color)
+        image.save(file_obj, format="PNG")
+        file_obj.seek(0)
+        return SimpleUploadedFile(name, file_obj.read(), content_type="image/png")
+
+    def test_site_branding_generates_header_logo_and_exposes_it_in_home_context(self):
+        branding = SiteBranding.objects.create(
+            site_name="Ricotti Atelier",
+            logo_alt="Ricotti logo",
+            logo_original=self._uploaded_logo(),
+        )
+
+        response = self.client.get(reverse("pages:home"))
+
+        branding.refresh_from_db()
+        self.assertTrue(bool(branding.logo_header))
+        self.assertIn(".webp", branding.logo_header.name)
+        self.assertEqual(response.context["site_brand_name"], "Ricotti Atelier")
+        self.assertEqual(response.context["site_logo_alt"], "Ricotti logo")
+        self.assertEqual(response.context["site_logo_url"], branding.logo_header.url)
 
 
 class HomeViewCategoryTilesTests(TestCase):

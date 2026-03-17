@@ -1,11 +1,15 @@
 {% load static %}
 <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-zinc-200">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="flex h-16 items-center gap-4">
+    <div class="flex min-h-20 items-center gap-4 py-3">
       <!-- Logo -->
       <a href="{% url 'pages:home' %}" class="flex items-center gap-2">
-        <img src="{% static 'csm/img/logo_2.png' %}" alt="Logo" class="h-27 w-27">
-        <span class="text-sm font-semibold tracking-wide uppercase">Ricotti</span>
+        {% if site_logo_url %}
+          <img src="{{ site_logo_url }}" alt="{{ site_logo_alt }}" class="h-16 w-auto max-w-[240px] object-contain sm:h-[4.5rem]">
+        {% else %}
+          <img src="{% static 'csm/img/logo_2.png' %}" alt="Logo" class="h-12 w-12 object-contain sm:h-14 sm:w-14">
+        {% endif %}
+        <span class="text-sm font-semibold tracking-[0.2em] uppercase sm:text-base">{{ site_brand_name }}</span>
       </a>
 
       <!-- Primary nav -->
