@@ -58,11 +58,6 @@ def home_view(request):
                 queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
                 to_attr="_prefetched_active_variants_for_pricing",
             ),
-            Prefetch(
-                "images",
-                queryset=ProductImage.objects.order_by("sort_order", "id"),
-                to_attr="_prefetched_images_for_primary",
-            ),
         )[:8]
     )
     trending_product_cards = [

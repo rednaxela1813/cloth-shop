@@ -30,11 +30,6 @@ def _catalog_products_queryset():
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
         ),
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_primary",
-        ),
     )
 
 
@@ -148,11 +143,6 @@ def build_catalog_category_context(*, request, slug: str, page_size: int) -> dic
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
-        ),
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_primary",
         ),
     )
 

@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
-from apps.products.models import Product, ProductImage, ProductVariant
+from apps.products.models import Product, ProductCategory, ProductImage, ProductVariant
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
 from apps.products.services.product_variant_presenter import build_active_variants_payload
 from apps.shipping.services import get_delivery_eta_label, get_return_window_label
@@ -49,11 +49,6 @@ def build_product_list_context(*, request, page_size: int) -> dict:
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
             to_attr="_prefetched_active_variants_for_pricing",
-        ),
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_primary",
         ),
     )
     qs = with_sort_price(qs)
@@ -127,6 +122,11 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
                 "variants",
                 queryset=ProductVariant.objects.filter(is_active=True).order_by("color", "size", "id"),
                 to_attr="_prefetched_active_variants_for_selection",
+            ),
+            Prefetch(
+                "category_links",
+                queryset=ProductCategory.objects.select_related("category").filter(category__is_active=True),
+                to_attr="_prefetched_primary_category_links",
             ),
         ),
         public_id=public_id,
