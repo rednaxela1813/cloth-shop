@@ -66,12 +66,16 @@ def build_product_list_context(*, request, page_size: int) -> dict:
         qs = qs.filter(brand__iexact=selected_brand)
 
     min_price = _read_decimal(request.GET.get("min_price", ""))
-    if min_price is not None:
-        qs = qs.filter(sort_price__gte=min_price)
-
     max_price = _read_decimal(request.GET.get("max_price", ""))
-    if max_price is not None:
-        qs = qs.filter(sort_price__lte=max_price)
+    if min_price is not None or max_price is not None:
+        price_filters = Q(sort_price__isnull=True)
+        if min_price is not None and max_price is not None:
+            price_filters |= Q(sort_price__gte=min_price, sort_price__lte=max_price)
+        elif min_price is not None:
+            price_filters |= Q(sort_price__gte=min_price)
+        else:
+            price_filters |= Q(sort_price__lte=max_price)
+        qs = qs.filter(price_filters)
 
     in_stock_only = request.GET.get("in_stock") == "1"
     if in_stock_only:

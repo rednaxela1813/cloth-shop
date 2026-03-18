@@ -105,6 +105,35 @@ def test_product_list_filter_by_price_range_uses_variant_display_price(client):
     assert list(resp.context["page_obj"].object_list) == [in_range]
 
 
+def test_product_list_price_filter_keeps_products_without_active_variant_price(client):
+    missing_price = Product.objects.create(name="No Variant Price", brand="X", is_active=True)
+    in_range = Product.objects.create(name="In range", brand="X", is_active=True)
+    out_of_range = Product.objects.create(name="Out range", brand="X", is_active=True)
+    ProductVariant.objects.create(
+        product=in_range,
+        size="M",
+        color="Black",
+        sku="IN2-M-BLK-LV",
+        price="49.00",
+        stock=1,
+        is_active=True,
+    )
+    ProductVariant.objects.create(
+        product=out_of_range,
+        size="M",
+        color="Black",
+        sku="OUT2-M-BLK-LV",
+        price="120.00",
+        stock=1,
+        is_active=True,
+    )
+
+    resp = client.get(reverse("products:list"), {"min_price": "40", "max_price": "80"})
+
+    assert resp.status_code == 200
+    assert list(resp.context["page_obj"].object_list) == [in_range, missing_price]
+
+
 def test_product_list_filter_in_stock_only(client):
     in_stock = Product.objects.create(name="Stock", brand="X", price="10.00", is_active=True)
     out_of_stock = Product.objects.create(name="No stock", brand="X", price="10.00", is_active=True)

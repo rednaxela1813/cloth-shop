@@ -138,32 +138,33 @@
   </div>
 
   <!-- Small chips row -->
-  <div class="mt-6 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
+  <div class="mt-6 flex gap-3">
+
     {% if has_new_arrivals %}
       <a
         href="{% url 'products:list' %}?new=1"
-        class="flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
+        class="flex min-w-0 flex-1 items-center justify-center rounded-full whitespace-nowrap border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
         >Novinky</a
       >
     {% endif %}
     <a
       href="{% url 'catalog:list' %}"
-      class="flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
+      class="flex min-w-0 flex-1 items-center justify-center rounded-full whitespace-nowrap border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
       >Dizajnérske značky</a
     >
     <a
       href="{% url 'catalog:list' %}"
-      class="flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
+      class="flex min-w-0 flex-1 items-center justify-center rounded-full whitespace-nowrap border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
       >Topánky</a
     >
     <a
       href="{% url 'catalog:list' %}"
-      class="flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
+      class="flex min-w-0 flex-1 items-center justify-center rounded-full whitespace-nowrap border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
       >Tašky</a
     >
     <a
       href="{% url 'catalog:list' %}"
-      class="flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
+      class="flex min-w-0 flex-1 items-center justify-center rounded-full whitespace-nowrap border border-zinc-200 bg-white px-3 py-2 text-center text-xs font-semibold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-50"
       >Doplnky</a
     >
   </div>

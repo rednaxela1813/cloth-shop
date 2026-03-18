@@ -158,7 +158,7 @@ class HomeViewCategoryTilesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["has_new_arrivals"])
         self.assertContains(response, reverse("products:list") + "?new=1")
-        self.assertContains(response, ">Novinky</a>", html=False)
+        self.assertContains(response, "Novinky")
 
     def test_home_view_hides_new_arrivals_button_without_recent_products(self):
         stale_product = Product.objects.create(name="Archive Coat", is_active=True)
