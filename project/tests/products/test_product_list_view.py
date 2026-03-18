@@ -1,5 +1,7 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
 from apps.products.models import Product, ProductVariant
 
@@ -129,6 +131,19 @@ def test_product_list_filter_in_stock_only(client):
 
     assert resp.status_code == 200
     assert list(resp.context["page_obj"].object_list) == [in_stock]
+
+
+def test_product_list_filter_new_only_uses_product_created_date(client):
+    recent = Product.objects.create(name="Recent", brand="X", price="10.00", is_active=True)
+    old = Product.objects.create(name="Old", brand="X", price="10.00", is_active=True)
+    Product.objects.filter(pk=recent.pk).update(created=timezone.now() - timedelta(days=5))
+    Product.objects.filter(pk=old.pk).update(created=timezone.now() - timedelta(days=20))
+
+    resp = client.get(reverse("products:list"), {"new": "1"})
+
+    assert resp.status_code == 200
+    assert resp.context["new_only"] is True
+    assert list(resp.context["page_obj"].object_list) == [Product.objects.get(pk=recent.pk)]
 
 
 def test_product_list_cards_link_to_product_detail_instead_of_posting_to_cart(client):

@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from datetime import timedelta
 
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
@@ -15,6 +17,8 @@ from apps.products.models import Product, ProductCategory, ProductImage, Product
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
 from apps.products.services.product_variant_presenter import build_active_variants_payload
 from apps.shipping.services import get_delivery_eta_label, get_return_window_label
+
+NEW_ARRIVALS_DAYS = 14
 
 
 @dataclass(frozen=True)
@@ -73,6 +77,11 @@ def build_product_list_context(*, request, page_size: int) -> dict:
     if in_stock_only:
         qs = qs.filter(variants__is_active=True, variants__stock__gt=0).distinct()
 
+    new_only = request.GET.get("new") == "1"
+    if new_only:
+        cutoff = timezone.now() - timedelta(days=NEW_ARRIVALS_DAYS)
+        qs = qs.filter(created__gte=cutoff)
+
     qs, _sort = sort_products_queryset(request=request, queryset=qs)
 
     paginator = Paginator(qs, page_size)
@@ -101,6 +110,7 @@ def build_product_list_context(*, request, page_size: int) -> dict:
         "selected_min_price": request.GET.get("min_price", ""),
         "selected_max_price": request.GET.get("max_price", ""),
         "in_stock_only": in_stock_only,
+        "new_only": new_only,
         "pagination_query": query_params.urlencode(),
     }
 

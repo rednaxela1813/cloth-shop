@@ -1,13 +1,18 @@
 # project/apps/csm/views.py
+from datetime import timedelta
+
 from django.conf import settings
 from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.products.models import Category, Product, ProductImage, ProductVariant
 from apps.shipping.services import get_return_window_days
 from .forms import ContactMessageForm
+
+NEW_ARRIVALS_DAYS = 14
 
 
 def healthz_view(request):
@@ -22,6 +27,8 @@ def _category_cover_urls(*, slugs: tuple[str, ...]) -> dict[str, str]:
 def home_view(request):
     categories = Category.objects.roots()
     category_cover_urls = _category_cover_urls(slugs=("women", "men", "sale"))
+    new_arrivals_cutoff = timezone.now() - timedelta(days=NEW_ARRIVALS_DAYS)
+    has_new_arrivals = Product.objects.active().filter(created__gte=new_arrivals_cutoff).exists()
 
     selected_category_slug = (request.GET.get("category") or "").strip()
     selected_subcategory_slug = (request.GET.get("subcategory") or "").strip()
@@ -78,6 +85,7 @@ def home_view(request):
         "women_tile_image_url": category_cover_urls.get("women", ""),
         "men_tile_image_url": category_cover_urls.get("men", ""),
         "sale_tile_image_url": category_cover_urls.get("sale", ""),
+        "has_new_arrivals": has_new_arrivals,
     }
     return render(request, "csm/pages/home.html", context)
 

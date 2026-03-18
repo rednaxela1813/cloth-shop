@@ -1,8 +1,10 @@
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from django.utils import timezone
 from PIL import Image
 import io
 import tempfile
+from datetime import timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 
@@ -44,6 +46,10 @@ class SiteBrandingTests(TestCase):
 
 
 class HomeViewCategoryTilesTests(TestCase):
+    def _set_product_created_days_ago(self, product, *, days_ago):
+        Product.objects.filter(pk=product.pk).update(created=timezone.now() - timedelta(days=days_ago))
+        product.refresh_from_db()
+        return product
 
     def test_home_view_exposes_women_tile_image_url_from_category_cover(self):
         Category.objects.create(
@@ -142,3 +148,24 @@ class HomeViewCategoryTilesTests(TestCase):
             response,
             reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug}),
         )
+
+    def test_home_view_shows_new_arrivals_button_when_recent_products_exist(self):
+        recent_product = Product.objects.create(name="Fresh Coat", is_active=True)
+        self._set_product_created_days_ago(recent_product, days_ago=3)
+
+        response = self.client.get(reverse("pages:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["has_new_arrivals"])
+        self.assertContains(response, reverse("products:list") + "?new=1")
+        self.assertContains(response, ">Novinky</a>", html=False)
+
+    def test_home_view_hides_new_arrivals_button_without_recent_products(self):
+        stale_product = Product.objects.create(name="Archive Coat", is_active=True)
+        self._set_product_created_days_ago(stale_product, days_ago=20)
+
+        response = self.client.get(reverse("pages:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["has_new_arrivals"])
+        self.assertNotContains(response, reverse("products:list") + "?new=1")
