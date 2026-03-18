@@ -2,11 +2,22 @@
 from __future__ import annotations
 
 from django.db.models import OuterRef, Subquery
+from django.db.models.functions import Coalesce
 
 from apps.products.models import ProductVariant
 
 
 def with_sort_price(queryset):
+    cheapest_in_stock_variant = (
+        ProductVariant.objects
+        .filter(
+            product_id=OuterRef("pk"),
+            is_active=True,
+            stock__gt=0,
+        )
+        .order_by("price", "id")
+        .values("price")[:1]
+    )
     cheapest_variant = (
         ProductVariant.objects
         .filter(
@@ -18,7 +29,10 @@ def with_sort_price(queryset):
     )
 
     return queryset.annotate(
-        sort_price=Subquery(cheapest_variant)
+        sort_price=Coalesce(
+            Subquery(cheapest_in_stock_variant),
+            Subquery(cheapest_variant),
+        )
     )
 
 

@@ -45,3 +45,42 @@ def test_sort_products_queryset_defaults_to_newest():
 
     assert sort == ""
     assert list(qs) == [newer, older]
+
+
+def test_sort_products_queryset_uses_cheapest_in_stock_price_first():
+    rf = RequestFactory()
+    request = rf.get("/shop/?sort=price_asc")
+    product = Product.objects.create(name="Mixed Stock", price="999.00", is_active=True)
+    cheaper_in_stock = Product.objects.create(name="Available", price="999.00", is_active=True)
+    ProductVariant.objects.create(
+        product=product,
+        size="S",
+        color="Black",
+        sku="MIX-S-BLK",
+        price="10.00",
+        stock=0,
+        is_active=True,
+    )
+    ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="MIX-M-BLK",
+        price="30.00",
+        stock=2,
+        is_active=True,
+    )
+    ProductVariant.objects.create(
+        product=cheaper_in_stock,
+        size="M",
+        color="Black",
+        sku="AVL-M-BLK",
+        price="20.00",
+        stock=1,
+        is_active=True,
+    )
+
+    qs, sort = sort_products_queryset(request=request, queryset=Product.objects.all())
+
+    assert sort == "price_asc"
+    assert list(qs) == [cheaper_in_stock, product]

@@ -30,8 +30,8 @@ def test_product_primary_image_uses_standard_prefetch_cache():
 
 def test_product_default_variant_uses_prefetched_active_variants():
     product = Product.objects.create(name="Boots", is_active=True)
-    ProductVariant.objects.create(product=product, size="S", color="Black", sku="BOOTS-S-BLK", price="20.00", stock=1, is_active=True)
-    best = ProductVariant.objects.create(
+    best = ProductVariant.objects.create(product=product, size="S", color="Black", sku="BOOTS-S-BLK", price="20.00", stock=1, is_active=True)
+    ProductVariant.objects.create(
         product=product,
         size="M",
         color="Black",

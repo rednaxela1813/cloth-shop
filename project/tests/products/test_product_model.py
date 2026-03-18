@@ -48,3 +48,30 @@ def test_product_has_public_id_uuid():
 
     assert isinstance(p.public_id, uuid.UUID)
     assert p.public_id is not None
+
+
+def test_product_display_price_prefers_cheapest_in_stock_variant():
+    from apps.products.models import Product, ProductVariant
+
+    product = Product.objects.create(name="Variant Bag", is_active=True)
+    ProductVariant.objects.create(
+        product=product,
+        size="S",
+        color="Black",
+        sku="VB-S-BLK",
+        price="50.00",
+        stock=0,
+        is_active=True,
+    )
+    in_stock = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="VB-M-BLK",
+        price="70.00",
+        stock=3,
+        is_active=True,
+    )
+
+    assert product.display_variant == in_stock
+    assert product.display_price == product.display_variant.price

@@ -188,27 +188,31 @@ class Product(models.Model):
         variants = self._pricing_variants()
         return variants[0] if variants else None
 
+    @cached_property
+    def lowest_priced_in_stock_variant(self):
+        variants = self._pricing_variants()
+        return next((variant for variant in variants if variant.stock > 0), None)
+
+    @cached_property
+    def display_variant(self):
+        return self.lowest_priced_in_stock_variant or self.lowest_priced_variant
+
     @property
     def display_price(self):
-        lowest = self.lowest_priced_variant
-        return lowest.price if lowest else None
+        variant = self.display_variant
+        return variant.price if variant else None
 
     @property
     def display_compare_at(self):
-        lowest = self.lowest_priced_variant
-        return lowest.compare_at if lowest else None
+        variant = self.display_variant
+        return variant.compare_at if variant else None
 
     @cached_property
     def default_variant(self):
         """
-        Предпочитаем вариант с наибольшим stock.
-        При равенстве — меньший id.
+        По умолчанию используем тот же вариант, цена которого показана пользователю первой.
         """
-        variants = self._active_variants_for_default_selection()
-        if not variants:
-            return None
-
-        return min(variants, key=lambda variant: (-variant.stock, variant.id))
+        return self.display_variant
     
     @property
     def primary_category(self):

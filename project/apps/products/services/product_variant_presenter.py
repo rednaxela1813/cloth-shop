@@ -6,7 +6,7 @@ def build_active_variants_payload(*, product):
     """
     Возвращает кортеж:
     1) активные варианты в стабильном порядке
-    2) selected_variant (первый с stock > 0, иначе первый из списка, иначе None)
+    2) selected_variant (самый дешёвый активный вариант в наличии, иначе fallback на самый дешёвый активный)
     3) payload для шаблона/JS
     """
     prefetched = getattr(product, "_prefetched_active_variants_for_selection", None)
@@ -14,7 +14,7 @@ def build_active_variants_payload(*, product):
         active_variants = list(product.variants.filter(is_active=True).order_by("color", "size", "id"))
     else:
         active_variants = list(prefetched)
-    selected_variant = next((v for v in active_variants if v.stock > 0), active_variants[0] if active_variants else None)
+    selected_variant = product.display_variant if active_variants else None
 
     variant_payload = [
         {

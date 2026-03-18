@@ -6,9 +6,9 @@ from apps.products.services.product_variant_presenter import build_active_varian
 pytestmark = pytest.mark.django_db
 
 
-def test_build_active_variants_payload_selects_first_in_stock_variant():
+def test_build_active_variants_payload_selects_lowest_priced_in_stock_variant():
     product = Product.objects.create(name="Variant Tee", price="100.00", is_active=True)
-    out_of_stock = ProductVariant.objects.create(
+    cheaper_out_of_stock = ProductVariant.objects.create(
         product=product,
         size="S",
         color="Black",
@@ -17,7 +17,7 @@ def test_build_active_variants_payload_selects_first_in_stock_variant():
         stock=0,
         is_active=True,
     )
-    in_stock = ProductVariant.objects.create(
+    cheapest_in_stock = ProductVariant.objects.create(
         product=product,
         size="M",
         color="Black",
@@ -29,10 +29,10 @@ def test_build_active_variants_payload_selects_first_in_stock_variant():
 
     active_variants, selected_variant, payload = build_active_variants_payload(product=product)
 
-    assert [v.id for v in active_variants] == [in_stock.id, out_of_stock.id]
-    assert selected_variant.id == in_stock.id
-    assert payload[0]["public_id"] == str(in_stock.public_id)
-    assert payload[1]["public_id"] == str(out_of_stock.public_id)
+    assert [v.id for v in active_variants] == [cheapest_in_stock.id, cheaper_out_of_stock.id]
+    assert selected_variant.id == cheapest_in_stock.id
+    assert payload[0]["public_id"] == str(cheapest_in_stock.public_id)
+    assert payload[1]["public_id"] == str(cheaper_out_of_stock.public_id)
 
 
 def test_build_active_variants_payload_returns_none_when_no_active_variants():
