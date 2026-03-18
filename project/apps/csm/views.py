@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
+from apps.csm.models import HomeHeroContent
 from apps.products.models import Category, Product, ProductImage, ProductVariant
 from apps.shipping.services import get_return_window_days
 from .forms import ContactMessageForm
@@ -24,7 +25,15 @@ def _category_cover_urls(*, slugs: tuple[str, ...]) -> dict[str, str]:
     return {category.slug: category.resolved_cover_image_url for category in categories}
 
 
+def _home_hero_content() -> HomeHeroContent:
+    hero_content = HomeHeroContent.objects.first()
+    if hero_content is not None:
+        return hero_content
+    return HomeHeroContent()
+
+
 def home_view(request):
+    hero_content = _home_hero_content()
     categories = Category.objects.roots()
     category_cover_urls = _category_cover_urls(slugs=("women", "men", "sale"))
     new_arrivals_cutoff = timezone.now() - timedelta(days=NEW_ARRIVALS_DAYS)
@@ -86,6 +95,7 @@ def home_view(request):
         "men_tile_image_url": category_cover_urls.get("men", ""),
         "sale_tile_image_url": category_cover_urls.get("sale", ""),
         "has_new_arrivals": has_new_arrivals,
+        "hero_content": hero_content,
     }
     return render(request, "csm/pages/home.html", context)
 

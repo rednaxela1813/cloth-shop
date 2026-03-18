@@ -2,34 +2,34 @@
   <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
       <div>
-        <div class="text-sm font-semibold uppercase tracking-wide">Novaglen</div>
+        <div class="text-sm font-semibold uppercase tracking-wide">{{ site_brand_name }}</div>
         <p class="mt-3 text-sm text-zinc-600">
-          Italian fashion marketplace: women, men, kids. Curated picks and fast delivery.
+          {{ footer_content.description }}
         </p>
       </div>
 
       <div>
-        <div class="text-sm font-semibold">Shop</div>
+        <div class="text-sm font-semibold">{{ footer_content.shop_title }}</div>
         <ul class="mt-3 space-y-2 text-sm text-zinc-600">
-          <li><a class="hover:text-zinc-900" href="">Women</a></li>
-          <li><a class="hover:text-zinc-900" href="">Men</a></li>
-          <li><a class="hover:text-zinc-900" href="">Kids</a></li>
-          <li><a class="hover:text-zinc-900" href="">Sale</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.shop_women_url }}">{{ footer_content.shop_women_label }}</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.shop_men_url }}">{{ footer_content.shop_men_label }}</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.shop_kids_url }}">{{ footer_content.shop_kids_label }}</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.shop_sale_url }}">{{ footer_content.shop_sale_label }}</a></li>
         </ul>
       </div>
 
       <div>
-        <div class="text-sm font-semibold">Help</div>
+        <div class="text-sm font-semibold">{{ footer_content.help_title }}</div>
         <ul class="mt-3 space-y-2 text-sm text-zinc-600">
-          <li><a class="hover:text-zinc-900" href="{% url 'pages:help' %}">Customer care</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.help_customer_care_url }}">{{ footer_content.help_customer_care_label }}</a></li>
           {% comment %} <li><a class="hover:text-zinc-900" href="{% url 'pages:shipping' %}">Shipping</a></li> {% endcomment %}
-          <li><a class="hover:text-zinc-900" href="{% url 'pages:returns' %}">Returns</a></li>
-          <li><a class="hover:text-zinc-900" href="{% url 'pages:contact' %}">Kontakt</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.help_returns_url }}">{{ footer_content.help_returns_label }}</a></li>
+          <li><a class="hover:text-zinc-900" href="{{ footer_content.help_contact_url }}">{{ footer_content.help_contact_label }}</a></li>
         </ul>
       </div>
 
       <div>
-        <div class="text-sm font-semibold">Legal</div>
+        <div class="text-sm font-semibold">{{ footer_content.legal_title }}</div>
         <ul class="mt-3 space-y-2 text-sm text-zinc-600">
           {% comment %} <li><a class="hover:text-zinc-900" href="{% url 'pages:privacy' %}">Privacy policy</a></li>
           <li><a class="hover:text-zinc-900" href="{% url 'pages:terms' %}">Terms</a></li>
@@ -39,10 +39,10 @@
     </div>
 
     <div class="mt-12 flex flex-col gap-3 border-t border-zinc-200 pt-6 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-      <div>© {% now "Y" %} Deilmann s.r.o. All rights reserved.</div>
+      <div>© {% now "Y" %} {{ footer_content.copyright_text }}</div>
       <div class="flex gap-4">
-        <span>SK/EU ready</span>
-        <span>Bezpečná platba</span>
+        <span>{{ footer_content.badge_primary }}</span>
+        <span>{{ footer_content.badge_secondary }}</span>
       </div>
     </div>
   </div>

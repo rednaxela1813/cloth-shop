@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 
-from apps.csm.models import SiteBranding
+from apps.csm.models import FooterContent, HomeHeroContent, SiteBranding
 from apps.products.models import Category, Product, ProductCategory
 
 
@@ -169,3 +169,98 @@ class HomeViewCategoryTilesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context["has_new_arrivals"])
         self.assertNotContains(response, reverse("products:list") + "?new=1")
+
+    def test_home_view_uses_hero_content_from_admin(self):
+        women = Category.objects.create(name="Women", slug="women", is_active=True)
+        men = Category.objects.create(name="Men", slug="men", is_active=True)
+        sale = Category.objects.create(name="Sale", slug="sale", is_active=True)
+        editorial = Category.objects.create(name="Editorial", slug="editorial", is_active=True, parent=women)
+
+        HomeHeroContent.objects.create(
+            eyebrow="Kurátorovaný výber",
+            title="Nový hero nadpis",
+            description="Nový hero popis.",
+            primary_cta_label="Pre ženy",
+            primary_cta_category=editorial,
+            secondary_cta_label="Pre mužov",
+            secondary_cta_category=men,
+            tertiary_cta_label="Pozrieť zľavy",
+            tertiary_cta_category=sale,
+            delivery_title="Rýchle doručenie",
+            delivery_text="Doručíme v priebehu pár dní.",
+            authenticity_title="Overený pôvod",
+            authenticity_text="Každý kus prechádza kontrolou.",
+        )
+
+        response = self.client.get(reverse("pages:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Kurátorovaný výber")
+        self.assertContains(response, "Nový hero nadpis")
+        self.assertContains(response, "Nový hero popis.")
+        self.assertContains(response, "Pre ženy")
+        self.assertContains(response, "Pre mužov")
+        self.assertContains(response, "Pozrieť zľavy")
+        self.assertContains(response, "Rýchle doručenie")
+        self.assertContains(response, "Doručíme v priebehu pár dní.")
+        self.assertContains(response, "Overený pôvod")
+        self.assertContains(response, "Každý kus prechádza kontrolou.")
+        self.assertContains(response, 'href="/catalog/editorial/"', html=False)
+        self.assertContains(response, 'href="/catalog/men/"', html=False)
+        self.assertContains(response, 'href="/catalog/sale/"', html=False)
+
+    def test_home_view_uses_footer_content_from_admin(self):
+        women = Category.objects.create(name="Women", slug="women", is_active=True)
+        men = Category.objects.create(name="Men", slug="men", is_active=True)
+        kids = Category.objects.create(name="Kids", slug="kids", is_active=True)
+        sale = Category.objects.create(name="Sale", slug="sale", is_active=True)
+        custom_women = Category.objects.create(name="Evening", slug="evening", is_active=True, parent=women)
+
+        FooterContent.objects.create(
+            description="Nový footer popis.",
+            shop_title="Nakupovať",
+            shop_women_label="Ženy",
+            shop_women_category=custom_women,
+            shop_men_label="Muži",
+            shop_men_category=men,
+            shop_kids_label="Deti",
+            shop_kids_category=kids,
+            shop_sale_label="Výpredaj",
+            shop_sale_category=sale,
+            help_title="Pomoc",
+            help_customer_care_label="Zákaznícka podpora",
+            help_customer_care_url="/pomoc/",
+            help_returns_label="Vrátenie",
+            help_returns_url="/vratenie/",
+            help_contact_label="Kontaktujte nás",
+            help_contact_url="/napiste-nam/",
+            legal_title="Právne informácie",
+            copyright_text="Ricotti s.r.o. Všetky práva vyhradené.",
+            badge_primary="Pripravené pre SK/EU",
+            badge_secondary="Bezpečný nákup",
+        )
+
+        response = self.client.get(reverse("pages:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nový footer popis.")
+        self.assertContains(response, "Nakupovať")
+        self.assertContains(response, "Ženy")
+        self.assertContains(response, "Muži")
+        self.assertContains(response, "Deti")
+        self.assertContains(response, "Výpredaj")
+        self.assertContains(response, "Pomoc")
+        self.assertContains(response, "Zákaznícka podpora")
+        self.assertContains(response, "Vrátenie")
+        self.assertContains(response, "Kontaktujte nás")
+        self.assertContains(response, "Právne informácie")
+        self.assertContains(response, "Ricotti s.r.o. Všetky práva vyhradené.")
+        self.assertContains(response, "Pripravené pre SK/EU")
+        self.assertContains(response, "Bezpečný nákup")
+        self.assertContains(response, 'href="/catalog/evening/"', html=False)
+        self.assertContains(response, 'href="/catalog/men/"', html=False)
+        self.assertContains(response, 'href="/catalog/kids/"', html=False)
+        self.assertContains(response, 'href="/catalog/sale/"', html=False)
+        self.assertContains(response, 'href="/pomoc/"', html=False)
+        self.assertContains(response, 'href="/vratenie/"', html=False)
+        self.assertContains(response, 'href="/napiste-nam/"', html=False)
