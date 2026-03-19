@@ -1,7 +1,6 @@
 # project/apps/csm/views.py
 from datetime import timedelta
 
-from django.conf import settings
 from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -9,9 +8,10 @@ from django.utils import timezone
 
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.csm.models import HomeHeroContent
+from apps.customer_comm.application.use_cases import submit_inquiry
+from apps.customer_comm.presentation.forms import PublicInquiryForm
 from apps.products.models import Category, Product, ProductImage, ProductVariant
 from apps.shipping.services import get_return_window_days
-from .forms import ContactMessageForm
 
 NEW_ARRIVALS_DAYS = 14
 
@@ -124,17 +124,13 @@ def contact_view(request):
     form_submitted = False
 
     if request.method == "POST":
-        form = ContactMessageForm(request.POST)
+        form = PublicInquiryForm(request.POST)
         if form.is_valid():
-            form.save()
+            submit_inquiry(form.to_dto(consent_ip=request.META.get("REMOTE_ADDR", "")))
             form_submitted = True
-            form = ContactMessageForm()
-
-            if getattr(settings, "CONTACT_SEND_ENABLED", False):
-                # Placeholder for future integrations (email/messenger).
-                pass
+            form = PublicInquiryForm()
     else:
-        form = ContactMessageForm()
+        form = PublicInquiryForm()
 
     context = {
         "title": "Kontakt - Ricotti",

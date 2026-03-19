@@ -14,6 +14,7 @@ services:
       - ./media:/app/media
     depends_on:
       - db
+      - redis
 
   tailwind:
     build:
@@ -25,6 +26,39 @@ services:
       - .:/app
     depends_on:
       - web
+
+  celery_worker:
+    build:
+      context: .
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.dev
+    env_file:
+      - ./.env
+    command: celery -A ital worker -l info
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    depends_on:
+      - db
+      - redis
+
+  celery_beat:
+    build:
+      context: .
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.dev
+    env_file:
+      - ./.env
+    command: celery -A ital beat -l info
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:7-alpine
 
   db:
     image: postgres:15-alpine

@@ -13,6 +13,12 @@ MESSENGER_CHOICES = [
 
 
 class ContactMessage(models.Model):
+    """
+    Legacy contact-form storage kept only for historical rows and migration compatibility.
+
+    New customer inquiries are handled by apps.customer_comm.
+    """
+
     name = models.CharField(max_length=120, blank=True, verbose_name=_("Meno"))
     email = models.EmailField(verbose_name=_("E-mail"))
     messenger_type = models.CharField(max_length=40, choices=MESSENGER_CHOICES, verbose_name=_("Typ messengera"))
@@ -25,8 +31,8 @@ class ContactMessage(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-        verbose_name = _("Kontaktná správa")
-        verbose_name_plural = _("Kontaktné správy")
+        verbose_name = _("Legacy kontaktná správa")
+        verbose_name_plural = _("Legacy kontaktné správy")
 
     def save(self, *args, **kwargs):
         if self.consent_given and self.consent_given_at is None:

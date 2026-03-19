@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "config.users.apps.UsersConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.csm.apps.CsmConfig",
+    "apps.customer_comm.apps.CustomerCommConfig",
     "apps.cart.apps.CartConfig",
     "apps.orders.apps.OrdersConfig",
     "apps.shipping.apps.ShippingConfig",
@@ -227,7 +228,46 @@ else:
     MEDIA_URL = config("MEDIA_URL", default="/media/")
     MEDIA_ROOT = BASE_DIR / "media"
 
+# Legacy flag kept for backward compatibility with older deployments.
 CONTACT_SEND_ENABLED = env_bool("CONTACT_SEND_ENABLED", default=False)
+
+# Customer communications
+COMMUNICATIONS_ENABLED = env_bool("COMMUNICATIONS_ENABLED", default=False)
+INQUIRY_RETENTION_DAYS = config("INQUIRY_RETENTION_DAYS", default=365, cast=int)
+INQUIRY_ANONYMIZE_INSTEAD_OF_DELETE = env_bool("INQUIRY_ANONYMIZE_INSTEAD_OF_DELETE", default=True)
+INQUIRY_MAX_DELIVERY_ATTEMPTS = config("INQUIRY_MAX_DELIVERY_ATTEMPTS", default=5, cast=int)
+INQUIRY_RETRY_BASE_DELAY_SECONDS = config("INQUIRY_RETRY_BASE_DELAY_SECONDS", default=300, cast=int)
+EMAIL_PROVIDER = config("EMAIL_PROVIDER", default="console")
+EMAIL_PROVIDER_API_KEY = config("EMAIL_PROVIDER_API_KEY", default="")
+EMAIL_PROVIDER_API_URL = config("EMAIL_PROVIDER_API_URL", default="")
+EMAIL_PROVIDER_TIMEOUT_SECONDS = config("EMAIL_PROVIDER_TIMEOUT_SECONDS", default=10, cast=int)
+EMAIL_FROM_ADDRESS = config("EMAIL_FROM_ADDRESS", default="")
+EMAIL_TO_ADDRESS = config("EMAIL_TO_ADDRESS", default="")
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHAT_ID = config("TELEGRAM_CHAT_ID", default="")
+PII_ENCRYPTION_KEY = config("PII_ENCRYPTION_KEY", default="")
+GDPR_PRIVACY_NOTICE_VERSION = config("GDPR_PRIVACY_NOTICE_VERSION", default="v1")
+GDPR_CONSENT_TEXT_VERSION = config("GDPR_CONSENT_TEXT_VERSION", default="v1")
+
+# Async processing
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default=CELERY_BROKER_URL)
+CELERY_TASK_ALWAYS_EAGER = env_bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+CELERY_TASK_EAGER_PROPAGATES = env_bool("CELERY_TASK_EAGER_PROPAGATES", default=True)
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULE = {
+    "customer-comm-retry-failed-deliveries": {
+        "task": "apps.customer_comm.tasks.retry_failed_deliveries",
+        "schedule": 300.0,
+    },
+    "customer-comm-cleanup-expired-inquiries": {
+        "task": "apps.customer_comm.tasks.cleanup_expired_inquiries",
+        "schedule": 86400.0,
+    },
+}
 
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="")
