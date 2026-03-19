@@ -34,22 +34,22 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.dev
     env_file:
-      - ./.env.staging
+      - /srv/ricotti/env/.env.staging
     command: celery -A ital worker -l info
     volumes:
-      - .:/app
-      - ./media:/app/media
+      - /srv/ricotti/app:/app
+      - /srv/ricotti/media:/app/media
     depends_on:
       - db
       - redis
-      
+
   celery_beat:
     build:
       context: .
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.dev
     env_file:
-      - ./.env.staging
+      - /srv/ricotti/env/.env.staging
     command: celery -A ital beat -l info
     volumes:
       - .:/app
