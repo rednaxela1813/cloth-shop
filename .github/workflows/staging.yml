@@ -17,6 +17,6 @@ jobs:
           username: ${{ secrets.STAGING_VPS_USER }}
           key: ${{ secrets.STAGING_VPS_SSH_KEY }}
           script: |
-            cd /srv/ricotti/app/cloth-shop/project
+            cd /srv/ricotti/deploy
             chmod +x deploy_staging.sh
             ./deploy_staging.sh
