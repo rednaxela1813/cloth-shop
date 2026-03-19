@@ -16,5 +16,6 @@ except ImportError:  # pragma: no cover - compatibility for local envs without c
     app = _NoopCelery()
 else:
     app = Celery("ital")
+    
     app.config_from_object("django.conf:settings", namespace="CELERY")
     app.autodiscover_tasks()
