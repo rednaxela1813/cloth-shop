@@ -34,7 +34,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.dev
     env_file:
-      - ./.env
+      - ./.env.staging
     command: celery -A ital worker -l info
     volumes:
       - .:/app
@@ -48,7 +48,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.dev
     env_file:
-      - ./.env
+      - ./.env.staging
     command: celery -A ital beat -l info
     volumes:
       - .:/app
