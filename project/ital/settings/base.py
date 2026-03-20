@@ -248,6 +248,10 @@ TELEGRAM_CHAT_ID = config("TELEGRAM_CHAT_ID", default="")
 PII_ENCRYPTION_KEY = config("PII_ENCRYPTION_KEY", default="")
 GDPR_PRIVACY_NOTICE_VERSION = config("GDPR_PRIVACY_NOTICE_VERSION", default="v1")
 GDPR_CONSENT_TEXT_VERSION = config("GDPR_CONSENT_TEXT_VERSION", default="v1")
+PACKETA_WIDGET_SCRIPT_URL = config(
+    "PACKETA_WIDGET_SCRIPT_URL",
+    default="https://widget.packeta.com/v6/www/js/library.js",
+)
 
 # Async processing
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")

@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.cart.services import get_or_create_cart
-from apps.shipping.services import calculate_shipping_cost, normalize_shipping_method
+from apps.shipping.services import calculate_shipping_cost, get_paketa_widget_config, normalize_shipping_method
 from .forms import CheckoutForm
 from .use_cases.checkout import build_checkout_initial, process_checkout_submission
 from .use_cases.handle_stripe_webhook import process_stripe_webhook
@@ -38,6 +38,7 @@ def checkout_view(request):
         subtotal=cart.subtotal,
         country=form.data.get("country") if form.is_bound else form.initial.get("country"),
     )
+    packeta_widget = get_paketa_widget_config(script_url=settings.PACKETA_WIDGET_SCRIPT_URL)
     order_total_preview = cart.subtotal + shipping_cost_preview
     field_error_names = [
         "full_name",
@@ -63,6 +64,7 @@ def checkout_view(request):
             "has_field_errors": has_field_errors,
             "shipping_cost_preview": shipping_cost_preview,
             "order_total_preview": order_total_preview,
+            "packeta_widget": packeta_widget,
         },
     )
 

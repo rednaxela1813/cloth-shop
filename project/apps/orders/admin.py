@@ -52,9 +52,50 @@ class OrderAdmin(admin.ModelAdmin):
     list_select_related = ("shipping_address", "user")
 
     fieldsets = (
-        (None, {"fields": ("public_id", "user", "email", "status", "shipping_method", "currency", "subtotal", "shipping_cost", "total", "created", "updated")}),
+        (
+            None,
+            {
+                "fields": (
+                    "public_id",
+                    "user",
+                    "email",
+                    "status",
+                    "shipping_method",
+                    "packeta_point_id",
+                    "packeta_point_name",
+                    "packeta_point_address",
+                    "packeta_carrier_id",
+                    "packeta_carrier_pickup_point_id",
+                    "packeta_point_raw",
+                    "currency",
+                    "subtotal",
+                    "shipping_cost",
+                    "total",
+                    "created",
+                    "updated",
+                )
+            },
+        ),
     )
-    readonly_fields = ("public_id", "user", "email", "status", "shipping_method", "currency", "subtotal", "shipping_cost", "total", "created", "updated")
+    readonly_fields = (
+        "public_id",
+        "user",
+        "email",
+        "status",
+        "shipping_method",
+        "packeta_point_id",
+        "packeta_point_name",
+        "packeta_point_address",
+        "packeta_carrier_id",
+        "packeta_carrier_pickup_point_id",
+        "packeta_point_raw",
+        "currency",
+        "subtotal",
+        "shipping_cost",
+        "total",
+        "created",
+        "updated",
+    )
 
     def has_delete_permission(self, request, obj=None):
         return False

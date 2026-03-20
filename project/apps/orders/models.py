@@ -78,6 +78,16 @@ class Order(models.Model):
         default=ShippingMethod.DPD_HOME,
         verbose_name=_("Spôsob dopravy"),
     )
+    packeta_point_id = models.CharField(max_length=64, blank=True, verbose_name=_("ID výdajného miesta Paketa"))
+    packeta_point_name = models.CharField(max_length=255, blank=True, verbose_name=_("Názov výdajného miesta Paketa"))
+    packeta_point_address = models.CharField(max_length=255, blank=True, verbose_name=_("Adresa výdajného miesta Paketa"))
+    packeta_carrier_id = models.CharField(max_length=64, blank=True, verbose_name=_("ID dopravcu Paketa"))
+    packeta_carrier_pickup_point_id = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name=_("ID pickup pointu dopravcu Paketa"),
+    )
+    packeta_point_raw = models.JSONField(default=dict, blank=True, verbose_name=_("Surové dáta výdajného miesta Paketa"))
     currency = models.CharField(max_length=3, default="EUR", verbose_name=_("Mena"))
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name=_("Medzisúčet"))
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name=_("Cena dopravy"))

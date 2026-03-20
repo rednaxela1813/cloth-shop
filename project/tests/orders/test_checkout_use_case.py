@@ -1,8 +1,11 @@
+import json
+
 import pytest
 from django.contrib.auth import get_user_model
 
 from apps.cart.services import get_or_create_cart
 from apps.orders.models import Order
+from apps.orders.services import create_order_from_cart
 from apps.orders.use_cases.checkout import build_checkout_initial, process_checkout_submission
 from apps.products.models import Product, ProductVariant
 
@@ -96,3 +99,64 @@ def test_process_checkout_submission_returns_customer_message_for_out_of_stock(c
 
     assert decision.redirect_url is None
     assert decision.form_error == "К сожалению, товар из вашей корзины уже закончился или доступного количества больше нет."
+
+
+def test_create_order_from_cart_persists_packeta_pickup_point_snapshot(client):
+    request = client.get("/checkout/").wsgi_request
+    cart = get_or_create_cart(request)
+    product = Product.objects.create(name="Coat", is_active=True)
+    variant = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Blue",
+        sku="COAT-BLU-M",
+        price="150.00",
+        stock=2,
+        is_active=True,
+    )
+    cart.items.create(variant=variant, quantity=1)
+
+    point_payload = {
+        "id": "12345",
+        "name": "Paketa Central",
+        "city": "Bratislava",
+        "street": "Main 7",
+        "zip": "81101",
+        "carrierId": "packeta",
+        "carrierPickupPointId": "pickup-77",
+        "formatedValue": "Paketa Central, Main 7, Bratislava",
+    }
+
+    order = create_order_from_cart(
+        request,
+        cart,
+        {
+            "full_name": "Buyer",
+            "email": "buyer@example.com",
+            "phone": "",
+            "country": "SK",
+            "shipping_method": Order.ShippingMethod.PAKETA_PICKUP,
+            "region": "",
+            "city": "",
+            "postal_code": "",
+            "address_line1": "",
+            "address_line2": "",
+            "packeta_point_id": "12345",
+            "packeta_point_name": "Paketa Central",
+            "packeta_point_address": "Paketa Central, Main 7, Bratislava",
+            "packeta_carrier_id": "packeta",
+            "packeta_carrier_pickup_point_id": "pickup-77",
+            "packeta_point_json": json.dumps(point_payload),
+        },
+    )
+
+    assert order.shipping_method == Order.ShippingMethod.PAKETA_PICKUP
+    assert order.packeta_point_id == "12345"
+    assert order.packeta_point_name == "Paketa Central"
+    assert order.packeta_point_address == "Paketa Central, Main 7, Bratislava"
+    assert order.packeta_carrier_id == "packeta"
+    assert order.packeta_carrier_pickup_point_id == "pickup-77"
+    assert order.packeta_point_raw["city"] == "Bratislava"
+    assert order.shipping_address.city == "Bratislava"
+    assert order.shipping_address.postal_code == "81101"
+    assert order.shipping_address.address_line1 == "Paketa Central, Main 7, Bratislava"

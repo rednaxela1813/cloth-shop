@@ -1,6 +1,7 @@
 # apps/orders/services.py
 from __future__ import annotations
 
+import json
 import logging
 from decimal import Decimal
 
@@ -16,6 +17,57 @@ from .gateways import stripe_gateway
 from .models import Address, Order, OrderItem, Payment, ProcessedStripeEvent
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_packeta_point_raw(value: str | None) -> dict:
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return {}
+    try:
+        parsed = json.loads(raw_value)
+    except json.JSONDecodeError:
+        logger.warning("Invalid Packeta point payload", extra={"event_type": "packeta.point.invalid_payload"})
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _clean_text(value) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _build_shipping_address_payload(data: dict, *, shipping_method: str) -> dict:
+    if shipping_method != Order.ShippingMethod.PAKETA_PICKUP:
+        return {
+            "country": data["country"],
+            "region": data.get("region", ""),
+            "city": data.get("city", ""),
+            "postal_code": data.get("postal_code", ""),
+            "address_line1": data.get("address_line1", ""),
+            "address_line2": data.get("address_line2", ""),
+        }
+
+    point_raw = _parse_packeta_point_raw(data.get("packeta_point_json"))
+    point_name = _clean_text(data.get("packeta_point_name"))
+    point_address = _clean_text(data.get("packeta_point_address"))
+    point_city = _clean_text(data.get("city") or point_raw.get("city"))
+    point_postal_code = (
+        data.get("postal_code")
+        or point_raw.get("zip")
+        or point_raw.get("zipcode")
+        or point_raw.get("postalCode")
+        or ""
+    )
+
+    return {
+        "country": data["country"],
+        "region": data.get("region", ""),
+        "city": point_city,
+        "postal_code": str(point_postal_code).strip(),
+        "address_line1": point_address or point_name,
+        "address_line2": "",
+    }
 
 
 def create_order_from_cart(request, cart: Cart, data: dict) -> Order:
@@ -38,17 +90,19 @@ def create_order_from_cart(request, cart: Cart, data: dict) -> Order:
                 raise ValueError(f"Not enough stock for {variant.product.name} ({variant.color}/{variant.size})")
 
         # Keep address snapshot for the order, even if user changes it later.
+        shipping_method = normalize_shipping_method(data.get("shipping_method"))
+        shipping_address_payload = _build_shipping_address_payload(data, shipping_method=shipping_method)
         address = Address.objects.create(
             user=request.user if request.user.is_authenticated else None,
             full_name=data["full_name"],
             email=data["email"],
             phone=data.get("phone", ""),
-            country=data["country"],
-            region=data.get("region", ""),
-            city=data["city"],
-            postal_code=data.get("postal_code", ""),
-            address_line1=data["address_line1"],
-            address_line2=data.get("address_line2", ""),
+            country=shipping_address_payload["country"],
+            region=shipping_address_payload["region"],
+            city=shipping_address_payload["city"],
+            postal_code=shipping_address_payload["postal_code"],
+            address_line1=shipping_address_payload["address_line1"],
+            address_line2=shipping_address_payload["address_line2"],
         )
 
         subtotal = Decimal("0.00")
@@ -56,19 +110,25 @@ def create_order_from_cart(request, cart: Cart, data: dict) -> Order:
             variant = locked_variants[item.variant_id]
             subtotal += variant.price * item.quantity
 
-        shipping_method = normalize_shipping_method(data.get("shipping_method"))
         shipping_cost = calculate_shipping_cost(
             shipping_method=shipping_method,
             subtotal=subtotal,
             country=data.get("country"),
         )
         total = subtotal + shipping_cost
+        packeta_point_raw = _parse_packeta_point_raw(data.get("packeta_point_json"))
 
         order = Order.objects.create(
             user=request.user if request.user.is_authenticated else None,
             email=data["email"],
             shipping_address=address,
             shipping_method=shipping_method,
+            packeta_point_id=_clean_text(data.get("packeta_point_id")),
+            packeta_point_name=_clean_text(data.get("packeta_point_name")),
+            packeta_point_address=_clean_text(data.get("packeta_point_address")),
+            packeta_carrier_id=_clean_text(data.get("packeta_carrier_id")),
+            packeta_carrier_pickup_point_id=_clean_text(data.get("packeta_carrier_pickup_point_id")),
+            packeta_point_raw=packeta_point_raw,
             subtotal=subtotal,
             shipping_cost=shipping_cost,
             total=total,

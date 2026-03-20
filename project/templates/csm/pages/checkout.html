@@ -9,6 +9,12 @@
       <div class="lg:col-span-2">
         <form method="post" class="space-y-4">
           {% csrf_token %}
+          {{ form.packeta_point_id }}
+          {{ form.packeta_point_name }}
+          {{ form.packeta_point_address }}
+          {{ form.packeta_carrier_id }}
+          {{ form.packeta_carrier_pickup_point_id }}
+          {{ form.packeta_point_json }}
           {% if form.errors %}
             <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <p class="font-medium">
@@ -70,6 +76,35 @@
             {% if form.shipping_method.errors %}
               <div id="shipping-method-error" class="text-xs text-red-600 mt-1">{{ form.shipping_method.errors|striptags }}</div>
             {% endif %}
+          </div>
+          <div
+            id="paketa-widget-section"
+            class="hidden rounded-2xl border border-zinc-200 bg-zinc-50 p-4"
+            data-widget-enabled="{% if packeta_widget.enabled %}true{% else %}false{% endif %}"
+            data-widget-api-key="{{ packeta_widget.api_key }}"
+            data-country-input-id="{{ form.country.id_for_label }}"
+            data-language="{{ request.LANGUAGE_CODE|default:'sk' }}"
+          >
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p class="text-sm font-medium">Výdajné miesto Paketa</p>
+                <p class="text-sm text-zinc-600">Vyberte pobočku alebo box priamo z mapy Packeta.</p>
+              </div>
+              <button
+                id="paketa-widget-open"
+                type="button"
+                class="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm hover:bg-zinc-100"
+              >
+                Vybrať výdajné miesto
+              </button>
+            </div>
+            <div id="paketa-widget-disabled" class="hidden mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Paketa widget ešte nie je nakonfigurovaný. Doplňte aktívny Paketa API kľúč v administrácii.
+            </div>
+            <div id="paketa-selected-point" class="mt-3 hidden rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
+              <p class="font-medium" id="paketa-selected-point-name"></p>
+              <p class="mt-1 text-emerald-800" id="paketa-selected-point-address"></p>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium">Región</label>
@@ -141,4 +176,119 @@
     <p>Váš košík je prázdny.</p>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  {% if packeta_widget.enabled %}
+    <script src="{{ packeta_widget.script_url }}"></script>
+  {% endif %}
+  <script>
+    (() => {
+      const shippingMethodInput = document.getElementById("{{ form.shipping_method.id_for_label }}");
+      const countryInput = document.getElementById("{{ form.country.id_for_label }}");
+      const widgetSection = document.getElementById("paketa-widget-section");
+      const openButton = document.getElementById("paketa-widget-open");
+      const disabledBanner = document.getElementById("paketa-widget-disabled");
+      const selectedPointBox = document.getElementById("paketa-selected-point");
+      const selectedPointName = document.getElementById("paketa-selected-point-name");
+      const selectedPointAddress = document.getElementById("paketa-selected-point-address");
+      const pointIdInput = document.getElementById("{{ form.packeta_point_id.id_for_label }}");
+      const pointNameInput = document.getElementById("{{ form.packeta_point_name.id_for_label }}");
+      const pointAddressInput = document.getElementById("{{ form.packeta_point_address.id_for_label }}");
+      const carrierIdInput = document.getElementById("{{ form.packeta_carrier_id.id_for_label }}");
+      const carrierPickupPointIdInput = document.getElementById("{{ form.packeta_carrier_pickup_point_id.id_for_label }}");
+      const pointJsonInput = document.getElementById("{{ form.packeta_point_json.id_for_label }}");
+      const widgetEnabled = widgetSection?.dataset.widgetEnabled === "true";
+      const widgetApiKey = widgetSection?.dataset.widgetApiKey || "";
+      const paketaShippingMethod = "paketa_pickup";
+
+      if (!shippingMethodInput || !widgetSection || !openButton) {
+        return;
+      }
+
+      const syncSelectedPointDisplay = () => {
+        const name = (pointNameInput?.value || "").trim();
+        const address = (pointAddressInput?.value || "").trim();
+        const hasPoint = Boolean(name || address);
+        selectedPointBox?.classList.toggle("hidden", !hasPoint);
+        if (selectedPointName) {
+          selectedPointName.textContent = name || "Výdajné miesto Paketa";
+        }
+        if (selectedPointAddress) {
+          selectedPointAddress.textContent = address || "";
+        }
+      };
+
+      const togglePaketaSection = () => {
+        const isPaketa = shippingMethodInput.value === paketaShippingMethod;
+        widgetSection.classList.toggle("hidden", !isPaketa);
+        if (!isPaketa) {
+          return;
+        }
+        disabledBanner?.classList.toggle("hidden", widgetEnabled);
+      };
+
+      const buildPointAddress = (point) => {
+        if (typeof point.formatedValue === "string" && point.formatedValue.trim()) {
+          return point.formatedValue.trim();
+        }
+
+        return [
+          point.place,
+          point.street,
+          point.city,
+          point.zip,
+        ].filter(Boolean).join(", ");
+      };
+
+      const saveSelectedPoint = (point) => {
+        if (!point || typeof point !== "object") {
+          return;
+        }
+
+        const address = buildPointAddress(point);
+        if (pointIdInput) {
+          pointIdInput.value = point.id || "";
+        }
+        if (pointNameInput) {
+          pointNameInput.value = point.name || point.place || "";
+        }
+        if (pointAddressInput) {
+          pointAddressInput.value = address;
+        }
+        if (carrierIdInput) {
+          carrierIdInput.value = point.carrierId || "";
+        }
+        if (carrierPickupPointIdInput) {
+          carrierPickupPointIdInput.value = point.carrierPickupPointId || "";
+        }
+        if (pointJsonInput) {
+          pointJsonInput.value = JSON.stringify(point);
+        }
+        syncSelectedPointDisplay();
+      };
+
+      openButton.addEventListener("click", () => {
+        if (!widgetEnabled || !window.Packeta?.Widget?.pick) {
+          disabledBanner?.classList.remove("hidden");
+          return;
+        }
+
+        const country = (countryInput?.value || "SK").trim().toLowerCase();
+        const language = (widgetSection.dataset.language || "sk").trim().toLowerCase();
+        window.Packeta.Widget.pick(
+          widgetApiKey,
+          saveSelectedPoint,
+          {
+            country,
+            language,
+          }
+        );
+      });
+
+      shippingMethodInput.addEventListener("change", togglePaketaSection);
+      syncSelectedPointDisplay();
+      togglePaketaSection();
+    })();
+  </script>
 {% endblock %}

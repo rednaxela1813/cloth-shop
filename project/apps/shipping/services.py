@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 
 from apps.orders.models import Order
 from .models import ReturnPolicyConfig, ShippingProviderConfig
 
 _FREE_SHIPPING_THRESHOLD = Decimal("120.00")
+
+
+@dataclass(frozen=True)
+class PaketaWidgetConfig:
+    enabled: bool
+    api_key: str = ""
+    script_url: str = ""
 
 
 def normalize_shipping_method(raw_value: str | None) -> str:
@@ -41,6 +49,20 @@ def get_delivery_eta_label(default: str = "24–48 h") -> str:
     if config and config.delivery_eta_label.strip():
         return config.delivery_eta_label.strip()
     return default
+
+
+def get_shipping_provider_config(provider: str) -> ShippingProviderConfig | None:
+    return ShippingProviderConfig.objects.filter(provider=provider, is_active=True).first()
+
+
+def get_paketa_widget_config(*, script_url: str) -> PaketaWidgetConfig:
+    config = get_shipping_provider_config(ShippingProviderConfig.Provider.PAKETA)
+    api_key = (config.api_key or "").strip() if config else ""
+    return PaketaWidgetConfig(
+        enabled=bool(api_key and script_url.strip()),
+        api_key=api_key,
+        script_url=script_url.strip(),
+    )
 
 
 def get_return_policy_config():
