@@ -16,6 +16,7 @@ from pathlib import Path
 
 from decouple import config
 from django.utils.translation import gettext_lazy as _
+from ital.logging import build_logging_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -38,6 +39,10 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool("DEBUG", default=False)
+LOG_LEVEL = config("LOG_LEVEL", default="INFO").upper()
+LOG_SQL = env_bool("LOG_SQL", default=False)
+LOG_JSON = env_bool("LOG_JSON", default=False)
+APP_LOG_RETENTION_DAYS = config("APP_LOG_RETENTION_DAYS", default=30, cast=int)
 
 
 def _csv_list(name: str, default: str = "") -> list[str]:
@@ -65,6 +70,7 @@ INSTALLED_APPS = [
     "apps.customer_comm.apps.CustomerCommConfig",
     "apps.cart.apps.CartConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.ops.apps.OpsConfig",
     "apps.shipping.apps.ShippingConfig",
     "apps.catalog",
     "apps.products",
@@ -81,6 +87,7 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "ital.middleware.RequestIdMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -252,6 +259,11 @@ PACKETA_WIDGET_SCRIPT_URL = config(
     "PACKETA_WIDGET_SCRIPT_URL",
     default="https://widget.packeta.com/v6/www/js/library.js",
 )
+LOGGING = build_logging_config(
+    default_level=LOG_LEVEL,
+    structured=LOG_JSON,
+    sql_debug=LOG_SQL,
+)
 
 # Async processing
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
@@ -269,6 +281,10 @@ CELERY_BEAT_SCHEDULE = {
     },
     "customer-comm-cleanup-expired-inquiries": {
         "task": "apps.customer_comm.tasks.cleanup_expired_inquiries",
+        "schedule": 86400.0,
+    },
+    "ops-cleanup-expired-app-logs": {
+        "task": "apps.ops.tasks.cleanup_expired_app_logs",
         "schedule": 86400.0,
     },
 }

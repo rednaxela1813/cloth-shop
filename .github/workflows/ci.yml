@@ -7,68 +7,64 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: ital_project
-          POSTGRES_USER: ital_project
-          POSTGRES_PASSWORD: ital_project
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U ital_project -d ital_project"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    defaults:
-      run:
-        working-directory: project
-
-    env:
-      DJANGO_SETTINGS_MODULE: ital.settings.dev
-      SECRET_KEY: ci-secret-key
-      DEBUG: "False"
-      ALLOWED_HOSTS: localhost,127.0.0.1
-      CSRF_TRUSTED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
-      DB_NAME: ital_project
-      DB_USER: ital_project
-      POSTGRES_PASSWORD: ital_project
-      DB_HOST: 127.0.0.1
-      DB_PORT: "5432"
-      TIME_ZONE: UTC
-      LANGUAGE_CODE: en-us
-      STATIC_URL: /static/
-      MEDIA_URL: /media/
-      CONTACT_SEND_ENABLED: "False"
-      STRIPE_SECRET_KEY: sk_test_ci
-      STRIPE_PUBLISHABLE_KEY: pk_test_ci
-      STRIPE_WEBHOOK_SECRET: whsec_ci
-      ORDER_ACCESS_TOKEN_MAX_AGE: "7200"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
+      - name: Create CI env file
+        working-directory: project
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          cat > .env <<'EOF'
+          DJANGO_SETTINGS_MODULE=ital.settings.dev
+          SECRET_KEY=ci-secret-key
+          DEBUG=False
+          ALLOWED_HOSTS=localhost,127.0.0.1
+          CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+          DB_NAME=ital_project
+          DB_USER=ital_project
+          POSTGRES_PASSWORD=ital_project
+          DB_HOST=db
+          DB_PORT=5432
+          TIME_ZONE=UTC
+          LANGUAGE_CODE=en-us
+          STATIC_URL=/static/
+          MEDIA_URL=/media/
+          CONTACT_SEND_ENABLED=False
+          COMMUNICATIONS_ENABLED=False
+          STRIPE_SECRET_KEY=sk_test_ci
+          STRIPE_PUBLISHABLE_KEY=pk_test_ci
+          STRIPE_WEBHOOK_SECRET=whsec_ci
+          ORDER_ACCESS_TOKEN_MAX_AGE=7200
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          EOF
+
+      - name: Build test image
+        working-directory: project
+        run: docker compose build web
+
+      - name: Start dependencies
+        working-directory: project
+        run: docker compose up -d db redis
 
       - name: Django deploy checks
-        run: python manage.py check --deploy
+        working-directory: project
+        run: docker compose run --rm -e DJANGO_SETTINGS_MODULE=ital.settings.prod web python manage.py check --deploy
 
       - name: Architecture guardrails
-        run: python scripts/check_architecture.py
+        working-directory: project
+        run: docker compose run --rm web python scripts/check_architecture.py
 
       - name: Migration drift check
-        run: python manage.py makemigrations --check --dry-run
+        working-directory: project
+        run: docker compose run --rm web python manage.py makemigrations --check --dry-run
 
       - name: Run tests
-        run: pytest
+        working-directory: project
+        run: docker compose run --rm web pytest
+
+      - name: Stop containers
+        if: always()
+        working-directory: project
+        run: docker compose down -v

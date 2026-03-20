@@ -40,3 +40,9 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 TAILWIND_APP_NAME = "theme"
+
+LOGGING = build_logging_config(
+    default_level=LOG_LEVEL if LOG_LEVEL != "INFO" else "DEBUG",
+    structured=LOG_JSON,
+    sql_debug=LOG_SQL,
+)

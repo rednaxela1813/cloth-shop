@@ -35,3 +35,9 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
 
 SECURE_REFERRER_POLICY = config("SECURE_REFERRER_POLICY", default="strict-origin-when-cross-origin")
+
+LOGGING = build_logging_config(
+    default_level=LOG_LEVEL,
+    structured=env_bool("LOG_JSON", default=True),
+    sql_debug=LOG_SQL,
+)

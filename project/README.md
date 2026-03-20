@@ -121,6 +121,36 @@ Local forwarding example with Stripe CLI:
 stripe listen --forward-to localhost:8000/checkout/stripe/webhook/
 ```
 
+## Logging
+
+The app logs to `stdout`, which is the correct target for Docker, gunicorn, and log shipping.
+
+Useful env vars:
+
+```env
+LOG_LEVEL=INFO
+LOG_JSON=false
+LOG_SQL=false
+APP_LOG_RETENTION_DAYS=30
+```
+
+Recommended defaults:
+
+- `ital.settings.dev`: human-readable logs, `DEBUG` app verbosity by default
+- `ital.settings.prod`: JSON logs to stdout
+- keep `LOG_SQL=true` only for short debugging sessions because it is noisy and can expose sensitive query values
+
+Every request gets an `X-Request-ID` header. Incoming `X-Request-ID` is preserved; otherwise the app generates one.
+Application logs now automatically include request context (`request_id`, method, path, IP) when available.
+
+Warnings and errors from the `apps.*` loggers are also stored in the database and can be reviewed in Django admin under `Aplikačné logy`.
+This storage is intentionally selective and is not a replacement for stdout log shipping.
+Expired admin log entries are cleaned up automatically once per day via Celery beat, and can be run manually with:
+
+```bash
+python manage.py process_app_log_retention
+```
+
 ## Fake catalog seeding
 
 Generate a large fake catalog for local browsing and performance checks:
