@@ -7,6 +7,9 @@ from apps.products.models import Product, ProductImage, ProductVariant
 
 
 def with_product_card_related(queryset=None):
+    # Это общий prefetch-профиль для любых витрин, которые рендерят product cards.
+    # Идея простая: все листинги должны одинаково подготавливать изображения и активные варианты,
+    # иначе одна страница покажет одно состояние товара, а другая другое.
     base_queryset = queryset if queryset is not None else Product.objects.active()
     return base_queryset.prefetch_related(
         Prefetch(
@@ -23,6 +26,9 @@ def with_product_card_related(queryset=None):
 
 
 def paginate_request_queryset(*, request, queryset, page_size: int):
+    # Пагинация и сохранение query params нужны практически всем листингам.
+    # Вынесено в отдельный helper, чтобы catalog/products не дублировали эту механику
+    # и одинаково вели себя при сортировке/фильтрах/перелистывании страниц.
     paginator = Paginator(queryset, page_size)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 

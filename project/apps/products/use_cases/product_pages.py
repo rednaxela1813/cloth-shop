@@ -2,26 +2,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
-from datetime import timedelta
 
 from django.db.models import Prefetch
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
 from apps.products.models import Product, ProductCategory, ProductImage, ProductVariant
-from apps.products.services.listing_service import paginate_request_queryset, with_product_card_related
+from apps.products.services.listing_service import with_product_card_related
 from apps.products.services.product_card_presenter import build_product_card_payload
-from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
-from apps.products.services.product_variant_presenter import (
-    build_active_variants_payload,
-    select_variant_from_request,
-)
+from apps.products.services.product_sorting_service import with_sort_price
+from apps.products.use_cases.product_list_filters import apply_product_list_filters
+from apps.products.use_cases.listing_pages import build_listing_page_context
+from apps.products.services.product_variant_presenter import build_variant_selection_state
 from apps.shipping.services import get_delivery_eta_label, get_return_window_label
-
-NEW_ARRIVALS_DAYS = 14
 
 
 @dataclass(frozen=True)
@@ -32,86 +25,38 @@ class ProductDetailResult:
     product: Product
 
 
-def _read_decimal(raw_value: str) -> Decimal | None:
-    value = (raw_value or "").strip()
-    if not value:
-        return None
-    try:
-        parsed = Decimal(value)
-    except (InvalidOperation, ValueError):
-        return None
-    if parsed < 0:
-        return None
-    return parsed
-
-
 def build_product_list_context(*, request, page_size: int) -> dict:
-    qs = with_product_card_related(Product.objects.active())
-    qs = with_sort_price(qs)
-
-    query = (request.GET.get("q") or "").strip()
-    if query:
-        qs = qs.filter(Q(name__icontains=query) | Q(brand__icontains=query))
-
-    selected_brand = (request.GET.get("brand") or "").strip()
-    if selected_brand:
-        qs = qs.filter(brand__iexact=selected_brand)
-
-    min_price = _read_decimal(request.GET.get("min_price", ""))
-    max_price = _read_decimal(request.GET.get("max_price", ""))
-    if min_price is not None or max_price is not None:
-        price_filters = Q(sort_price__isnull=True)
-        if min_price is not None and max_price is not None:
-            price_filters |= Q(sort_price__gte=min_price, sort_price__lte=max_price)
-        elif min_price is not None:
-            price_filters |= Q(sort_price__gte=min_price)
-        else:
-            price_filters |= Q(sort_price__lte=max_price)
-        qs = qs.filter(price_filters)
-
-    in_stock_only = request.GET.get("in_stock") == "1"
-    if in_stock_only:
-        qs = qs.filter(variants__is_active=True, variants__stock__gt=0).distinct()
-
-    new_only = request.GET.get("new") == "1"
-    if new_only:
-        cutoff = timezone.now() - timedelta(days=NEW_ARRIVALS_DAYS)
-        qs = qs.filter(created__gte=cutoff)
-
-    qs, _sort = sort_products_queryset(request=request, queryset=qs)
-
-    paginator, page_obj, pagination_query = paginate_request_queryset(
+    # Product list use-case теперь почти декларативный:
+    # 1) подготавливаем storefront queryset
+    # 2) применяем shop-specific filters helper
+    # 3) прогоняем результат через общий listing compose-layer
+    base_queryset = with_sort_price(with_product_card_related(Product.objects.active()))
+    filters_result = apply_product_list_filters(
         request=request,
-        queryset=qs,
-        page_size=page_size,
+        queryset=base_queryset,
     )
-    product_cards = [
-        build_product_card_payload(product=product, request=request)
-        for product in page_obj.object_list
-    ]
-    brands = (
-        Product.objects.filter(is_active=True)
-        .exclude(brand="")
-        .values_list("brand", flat=True)
-        .distinct()
-        .order_by("brand")
+    listing_context = build_listing_page_context(
+        request=request,
+        queryset=filters_result.queryset,
+        page_size=page_size,
     )
 
     return {
-        "page_obj": page_obj,
-        "product_cards": product_cards,
-        "products_count": paginator.count,
-        "brands": brands,
-        "selected_brand": selected_brand,
-        "selected_min_price": request.GET.get("min_price", ""),
-        "selected_max_price": request.GET.get("max_price", ""),
-        "in_stock_only": in_stock_only,
-        "new_only": new_only,
-        "pagination_query": pagination_query,
+        **listing_context,
+        "brands": filters_result.brands,
+        "selected_brand": filters_result.selected_brand,
+        "selected_min_price": filters_result.selected_min_price,
+        "selected_max_price": filters_result.selected_max_price,
+        "in_stock_only": filters_result.in_stock_only,
+        "new_only": filters_result.new_only,
     }
 
 
 def build_product_detail_result(*, request, public_id, slug: str) -> ProductDetailResult:
+    # Detail page заранее подгружает несколько разных представлений variants/categories:
+    # - pricing order для display_variant
+    # - selection order для UI выбора color/size
+    # - category links для breadcrumbs
     product = get_object_or_404(
         Product.objects.prefetch_related(
             Prefetch(
@@ -139,6 +84,7 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
         is_active=True,
     )
     if slug != product.slug:
+        # Канонизируем slug, но сам product уже нашли по public_id.
         return ProductDetailResult(
             redirect_slug=product.slug,
             context=None,
@@ -158,6 +104,8 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
         elif primary_image.image_original:
             og_image_url = request.build_absolute_uri(primary_image.image_original.url)
 
+    # Related products используют тот же card pipeline, что и основные листинги.
+    # Это важно: "related" не должны рендериться по своей отдельной логике цены/картинки.
     related_products = (
         with_product_card_related(
             Product.objects.active()
@@ -172,11 +120,9 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
         build_product_card_payload(product=related_product, request=request)
         for related_product in related_products
     ]
-    active_variants, selected_variant, variant_payload = build_active_variants_payload(product=product)
-    selected_variant = select_variant_from_request(
+    variant_selection = build_variant_selection_state(
         product=product,
         variant_public_id=(request.GET.get("variant") or "").strip(),
-        active_variants=active_variants,
     )
 
     return ProductDetailResult(
@@ -193,8 +139,8 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
             "absolute_url": absolute_url,
             "og_image_url": og_image_url,
             "breadcrumbs": breadcrumbs_for_product(product),
-            "selected_variant": selected_variant,
-            "active_variants": active_variants,
-            "variant_payload": variant_payload,
+            "selected_variant": variant_selection.selected_variant,
+            "active_variants": variant_selection.active_variants,
+            "variant_payload": variant_selection.variant_payload,
         },
     )
