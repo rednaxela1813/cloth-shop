@@ -28,3 +28,21 @@ def build_active_variants_payload(*, product):
         for v in active_variants
     ]
     return active_variants, selected_variant, variant_payload
+
+
+def select_variant_from_request(*, product, variant_public_id, active_variants):
+    if not variant_public_id or not active_variants:
+        return product.display_variant if active_variants else None
+
+    requested_variant = next(
+        (
+            variant
+            for variant in active_variants
+            if str(variant.public_id) == variant_public_id
+        ),
+        None,
+    )
+    if requested_variant is not None:
+        return requested_variant
+
+    return product.display_variant

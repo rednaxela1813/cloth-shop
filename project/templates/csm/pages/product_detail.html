@@ -120,7 +120,11 @@
           <div class="grid gap-2 sm:grid-cols-2">
             <div>
               <label for="variant-color" class="block text-xs font-medium uppercase tracking-wide text-zinc-500">Farba</label>
-              <select id="variant-color" class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm">
+              <select
+                id="variant-color"
+                class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                data-selected-color="{{ selected_variant.color }}"
+              >
                 {% for variant in active_variants %}
                   <option value="{{ variant.color }}" {% if variant.color == selected_variant.color %}selected{% endif %}>
                     {{ variant.color }}
@@ -130,7 +134,11 @@
             </div>
             <div>
               <label for="variant-size" class="block text-xs font-medium uppercase tracking-wide text-zinc-500">Velkost</label>
-              <select id="variant-size" class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm">
+              <select
+                id="variant-size"
+                class="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                data-selected-size="{{ selected_variant.size }}"
+              >
                 {% for variant in active_variants %}
                   <option value="{{ variant.size }}" {% if variant.size == selected_variant.size and variant.color == selected_variant.color %}selected{% endif %}>
                     {{ variant.size }}
@@ -198,9 +206,7 @@
             Nedostupne
           </button>
         {% endif %}
-        <button class="h-12 rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-900">
-          Add to wishlist
-        </button>
+       {# <button class="h-12 rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-900"> Add to wishlist  </button> #}
       </div>
 
       {% if product.details %}
@@ -258,6 +264,8 @@
         }
 
         const uniqueColors = [...new Set(variants.map(v => v.color))];
+        const initialColor = colorSelect.dataset.selectedColor || colorSelect.value;
+        const initialSize = sizeSelect.dataset.selectedSize || sizeSelect.value;
 
         function sizesForColor(color) {
           return variants.filter(v => v.color === color).map(v => v.size);
@@ -343,6 +351,10 @@
           option.textContent = color;
           colorSelect.appendChild(option);
         });
+        if (uniqueColors.includes(initialColor)) {
+          colorSelect.value = initialColor;
+        }
+        sizeSelect.value = initialSize;
 
         colorSelect.addEventListener("change", function () {
           syncSizes();

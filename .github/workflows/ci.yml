@@ -23,6 +23,8 @@ jobs:
           CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
           DB_NAME=ital_project
           DB_USER=ital_project
+          POSTGRES_DB=ital_project
+          POSTGRES_USER=ital_project
           POSTGRES_PASSWORD=ital_project
           DB_HOST=db
           DB_PORT=5432
@@ -47,6 +49,18 @@ jobs:
       - name: Start dependencies
         working-directory: project
         run: docker compose up -d db redis
+
+      - name: Wait for Postgres
+        working-directory: project
+        run: |
+          for i in $(seq 1 30); do
+            if docker compose exec -T db pg_isready -U ital_project -d ital_project; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs db
+          exit 1
 
       - name: Django deploy checks
         working-directory: project

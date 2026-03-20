@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.http import urlencode
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_catalog_index, breadcrumbs_for_category
 from apps.products.models import Category, Product, ProductImage, ProductVariant
@@ -61,15 +62,19 @@ def build_product_card_payload(*, product, request, cta_mode=None):
     compare_at = product.display_compare_at
     price = product.display_price
 
+    detail_url = reverse(
+        "products:detail",
+        kwargs={"public_id": product.public_id, "slug": product.slug},
+    )
+    if default_variant:
+        detail_url = f"{detail_url}?{urlencode({'variant': str(default_variant.public_id)})}"
+
     return {
         "public_id": str(product.public_id),
         "slug": product.slug,
         "name": product.name,
         "brand": product.brand or "Designer",
-        "detail_url": reverse(
-            "products:detail",
-            kwargs={"public_id": product.public_id, "slug": product.slug},
-        ),
+        "detail_url": detail_url,
         "image_url": image_url,
         "image_alt": image_alt,
         "price": price,

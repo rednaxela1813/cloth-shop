@@ -193,3 +193,26 @@ def test_product_list_cards_link_to_product_detail_instead_of_posting_to_cart(cl
     html = resp.content.decode("utf-8")
     assert reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug}) in html
     assert reverse("cart:add", kwargs={"public_id": variant.public_id}) not in html
+
+
+def test_product_list_cards_link_to_product_detail_with_default_variant_query(client):
+    product = Product.objects.create(name="Coat", brand="Gucci", price="10.00", is_active=True)
+    variant = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="COAT-M-BLK-QS",
+        price="10.00",
+        stock=2,
+        is_active=True,
+    )
+
+    resp = client.get(reverse("products:list"))
+
+    assert resp.status_code == 200
+    html = resp.content.decode("utf-8")
+    expected_url = (
+        reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug})
+        + f"?variant={variant.public_id}"
+    )
+    assert expected_url in html

@@ -15,7 +15,10 @@ from apps.catalog.breadcrumbs import breadcrumbs_for_product
 from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.products.models import Product, ProductCategory, ProductImage, ProductVariant
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
-from apps.products.services.product_variant_presenter import build_active_variants_payload
+from apps.products.services.product_variant_presenter import (
+    build_active_variants_payload,
+    select_variant_from_request,
+)
 from apps.shipping.services import get_delivery_eta_label, get_return_window_label
 
 NEW_ARRIVALS_DAYS = 14
@@ -190,6 +193,11 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
         for related_product in related_products
     ]
     active_variants, selected_variant, variant_payload = build_active_variants_payload(product=product)
+    selected_variant = select_variant_from_request(
+        product=product,
+        variant_public_id=(request.GET.get("variant") or "").strip(),
+        active_variants=active_variants,
+    )
 
     return ProductDetailResult(
         redirect_slug=None,

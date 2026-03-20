@@ -259,3 +259,118 @@ def test_product_detail_exposes_variant_selection_context(client):
     assert response.context["selected_variant"].id == v2.id
     payload = response.context["variant_payload"]
     assert len(payload) == 2
+
+
+def test_product_detail_prefers_requested_active_variant_from_query(client):
+    product = Product.objects.create(
+        name="Variant Dress",
+        brand="Gucci",
+        price="220.00",
+        is_active=True,
+    )
+    default_variant = ProductVariant.objects.create(
+        product=product,
+        size="S",
+        color="Black",
+        sku="VD-BLK-S-QP",
+        price="220.00",
+        stock=3,
+        is_active=True,
+    )
+    requested_variant = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="VD-BLK-M-QP",
+        price="230.00",
+        stock=1,
+        is_active=True,
+    )
+
+    response = client.get(
+        reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug}),
+        {"variant": str(requested_variant.public_id)},
+    )
+
+    assert response.status_code == 200
+    assert response.context["selected_variant"].id == requested_variant.id
+    assert response.context["selected_variant"].id != default_variant.id
+
+
+def test_product_detail_ignores_invalid_variant_query_and_falls_back(client):
+    product = Product.objects.create(
+        name="Variant Dress",
+        brand="Gucci",
+        price="220.00",
+        is_active=True,
+    )
+    fallback_variant = ProductVariant.objects.create(
+        product=product,
+        size="S",
+        color="Black",
+        sku="VD-BLK-S-QF",
+        price="220.00",
+        stock=3,
+        is_active=True,
+    )
+    ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="VD-BLK-M-QF",
+        price="230.00",
+        stock=1,
+        is_active=False,
+    )
+    other_product = Product.objects.create(
+        name="Other Dress",
+        brand="Gucci",
+        price="210.00",
+        is_active=True,
+    )
+    foreign_variant = ProductVariant.objects.create(
+        product=other_product,
+        size="L",
+        color="Red",
+        sku="OD-RED-L-QF",
+        price="210.00",
+        stock=2,
+        is_active=True,
+    )
+
+    response = client.get(
+        reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug}),
+        {"variant": str(foreign_variant.public_id)},
+    )
+
+    assert response.status_code == 200
+    assert response.context["selected_variant"].id == fallback_variant.id
+
+
+def test_product_detail_redirect_preserves_variant_query_on_wrong_slug(client):
+    product = Product.objects.create(
+        name="Silk Dress",
+        brand="Gucci",
+        price="220.00",
+        is_active=True,
+    )
+    variant = ProductVariant.objects.create(
+        product=product,
+        size="M",
+        color="Black",
+        sku="SD-BLK-M-QR",
+        price="220.00",
+        stock=1,
+        is_active=True,
+    )
+
+    response = client.get(
+        reverse("products:detail", kwargs={"public_id": product.public_id, "slug": "wrong-slug"}),
+        {"variant": str(variant.public_id)},
+    )
+
+    assert response.status_code == 301
+    assert response["Location"].endswith(
+        reverse("products:detail", kwargs={"public_id": product.public_id, "slug": product.slug})
+        + f"?variant={variant.public_id}"
+    )
