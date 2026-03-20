@@ -9,7 +9,6 @@ def test_product_detail_has_basic_seo_meta(client):
     p = Product.objects.create(
         name="Main",
         brand="Dolce",
-        price="200.00",
         is_active=True,
     )
 
@@ -36,5 +35,4 @@ def test_product_detail_has_basic_seo_meta(client):
     # OpenGraph (минимум)
     assert 'property="og:title"' in html
     assert 'property="og:description"' in html
-
 

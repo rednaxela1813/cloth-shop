@@ -25,7 +25,7 @@ def test_catalog_category_has_breadcrumbs(client):
     /catalog/<slug>/ должен показывать: Home -> Catalog -> Category
     """
     cat = Category.objects.create(name="Shoes", is_active=True)
-    product = Product.objects.create(name="Derby", brand="Test", price="10.00", is_active=True)
+    product = Product.objects.create(name="Derby", brand="Test", is_active=True)
     ProductCategory.objects.create(product=product, category=cat, is_primary=True)
     url = reverse("catalog:category", kwargs={"slug": cat.slug})
     resp = client.get(url)
@@ -43,7 +43,7 @@ def test_product_detail_breadcrumbs_use_primary_category(client):
     cat1 = Category.objects.create(name="Shoes", is_active=True, sort_order=10)
     cat2 = Category.objects.create(name="Bags", is_active=True, sort_order=1)
 
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
 
     # Привяжем обе категории, но primary сделаем cat1 (Shoes)
     ProductCategory.objects.create(product=p, category=cat2, sort_order=1, is_primary=False)
@@ -65,7 +65,7 @@ def test_product_detail_breadcrumbs_fallback_to_first_category(client):
     cat1 = Category.objects.create(name="Shoes", is_active=True, sort_order=10)
     cat2 = Category.objects.create(name="Bags", is_active=True, sort_order=1)
 
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
 
     # primary нигде не ставим
     ProductCategory.objects.create(product=p, category=cat1, sort_order=10, is_primary=False)

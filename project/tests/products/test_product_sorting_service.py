@@ -10,10 +10,14 @@ pytestmark = pytest.mark.django_db
 def test_sort_products_queryset_price_asc():
     rf = RequestFactory()
     request = rf.get("/shop/?sort=price_asc")
-    low = Product.objects.create(name="Low", price="999.00", is_active=True)
-    high = Product.objects.create(name="High", price="1.00", is_active=True)
-    ProductVariant.objects.create(product=low, size="M", color="Black", sku="LOW-M-BLK", price="10.00", stock=1, is_active=True)
-    ProductVariant.objects.create(product=high, size="M", color="Black", sku="HIGH-M-BLK", price="20.00", stock=1, is_active=True)
+    low = Product.objects.create(name="Low", is_active=True)
+    high = Product.objects.create(name="High", is_active=True)
+    ProductVariant.objects.create(
+        product=low, size="M", color="Black", sku="LOW-M-BLK", price="10.00", stock=1, is_active=True
+    )
+    ProductVariant.objects.create(
+        product=high, size="M", color="Black", sku="HIGH-M-BLK", price="20.00", stock=1, is_active=True
+    )
 
     qs, sort = sort_products_queryset(request=request, queryset=Product.objects.all())
 
@@ -24,10 +28,14 @@ def test_sort_products_queryset_price_asc():
 def test_sort_products_queryset_price_desc():
     rf = RequestFactory()
     request = rf.get("/shop/?sort=price_desc")
-    low = Product.objects.create(name="Low2", price="999.00", is_active=True)
-    high = Product.objects.create(name="High2", price="1.00", is_active=True)
-    ProductVariant.objects.create(product=low, size="M", color="Blue", sku="LOW2-M-BLU", price="10.00", stock=1, is_active=True)
-    ProductVariant.objects.create(product=high, size="M", color="Blue", sku="HIGH2-M-BLU", price="20.00", stock=1, is_active=True)
+    low = Product.objects.create(name="Low2", is_active=True)
+    high = Product.objects.create(name="High2", is_active=True)
+    ProductVariant.objects.create(
+        product=low, size="M", color="Blue", sku="LOW2-M-BLU", price="10.00", stock=1, is_active=True
+    )
+    ProductVariant.objects.create(
+        product=high, size="M", color="Blue", sku="HIGH2-M-BLU", price="20.00", stock=1, is_active=True
+    )
 
     qs, sort = sort_products_queryset(request=request, queryset=Product.objects.all())
 
@@ -38,8 +46,8 @@ def test_sort_products_queryset_price_desc():
 def test_sort_products_queryset_defaults_to_newest():
     rf = RequestFactory()
     request = rf.get("/shop/")
-    older = Product.objects.create(name="Older", price="10.00", is_active=True)
-    newer = Product.objects.create(name="Newer", price="20.00", is_active=True)
+    older = Product.objects.create(name="Older", is_active=True)
+    newer = Product.objects.create(name="Newer", is_active=True)
 
     qs, sort = sort_products_queryset(request=request, queryset=Product.objects.all())
 
@@ -50,8 +58,8 @@ def test_sort_products_queryset_defaults_to_newest():
 def test_sort_products_queryset_uses_cheapest_in_stock_price_first():
     rf = RequestFactory()
     request = rf.get("/shop/?sort=price_asc")
-    product = Product.objects.create(name="Mixed Stock", price="999.00", is_active=True)
-    cheaper_in_stock = Product.objects.create(name="Available", price="999.00", is_active=True)
+    product = Product.objects.create(name="Mixed Stock", is_active=True)
+    cheaper_in_stock = Product.objects.create(name="Available", is_active=True)
     ProductVariant.objects.create(
         product=product,
         size="S",

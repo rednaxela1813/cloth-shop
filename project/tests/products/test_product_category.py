@@ -9,7 +9,7 @@ def test_product_can_have_multiple_categories():
     """
     Товар может быть привязан к нескольким категориям.
     """
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
 
     c1 = Category.objects.create(name="Men")
     c2 = Category.objects.create(name="Shoes")
@@ -26,7 +26,7 @@ def test_only_one_primary_category_per_product():
     Гарантируем: у одного товара может быть только одна primary category.
     Если создаём/сохраняем новую primary — старая должна сброситься.
     """
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
 
     c1 = Category.objects.create(name="Men")
     c2 = Category.objects.create(name="Shoes")

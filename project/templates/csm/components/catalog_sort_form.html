@@ -1,0 +1,21 @@
+<form method="get" class="flex items-center gap-2">
+  {% for k, v in request.GET.items %}
+    {% if k != "sort" %}
+      <input type="hidden" name="{{ k }}" value="{{ v }}">
+    {% endif %}
+  {% endfor %}
+
+  <select
+    name="sort"
+    class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
+    onchange="this.form.submit()"
+  >
+    <option value="new" {% if sort == "new" %}selected{% endif %}>Nové</option>
+    <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>
+      Cena ↑
+    </option>
+    <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>
+      Cena ↓
+    </option>
+  </select>
+</form>

@@ -16,7 +16,7 @@ class OrderModelsTests(TestCase):
             email="buyer@example.com",
             password="pass12345",
         )
-        self.product = Product.objects.create(name="Test Product", price="25.00")
+        self.product = Product.objects.create(name="Test Product")
         self.variant = ProductVariant.objects.create(
             product=self.product,
             size="M",

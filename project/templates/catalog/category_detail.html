@@ -102,39 +102,11 @@
         </p>
 
         <div class="flex flex-wrap items-center gap-2">
-          <form method="get" class="flex items-center gap-2">
-          {% for k, v in request.GET.items %}
-            {% if k != "sort" %}
-              <input type="hidden" name="{{ k }}" value="{{ v }}">
-            {% endif %}
-          {% endfor %}
-
-          <select
-            name="sort"
-            class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
-            onchange="this.form.submit()"
-          >
-            <option value="new" {% if sort == "new" %}selected{% endif %}>Nové</option>
-            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>
-              Cena ↑
-            </option>
-            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>
-              Cena ↓
-            </option>
-          </select>
-          </form>
+          {% include "csm/components/catalog_sort_form.html" %}
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {% for card in product_cards %}
-          {% include "csm/components/product_card.html" with card=card %}
-        {% empty %}
-          <div class="col-span-full rounded-2xl border border-zinc-200 p-10 text-center text-sm text-zinc-600">
-            Žiadne produkty nenájdené.
-          </div>
-        {% endfor %}
-      </div>
+      {% include "csm/components/product_grid.html" with empty_message="Žiadne produkty nenájdené." %}
 
       {% if page_obj.paginator.num_pages > 1 %}
         <div class="mt-10">

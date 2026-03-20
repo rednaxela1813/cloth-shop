@@ -8,57 +8,6 @@ pytestmark = pytest.mark.django_db
 
 def test_product_detail_200_for_active_product(client):
     """
-    Активный товар открывается по slug.
-    Контекст должен содержать product, images, primary_image.
-    """
-    p = Product.objects.create(
-        name="Boots",
-        brand="Gucci",
-        price="10.00",
-        is_active=True,
-    )
-
-    # без реального файла — просто проверяем, что queryset/контекст работает
-    ProductImage.objects.create(product=p, alt="one", sort_order=2, is_primary=False)
-    ProductImage.objects.create(product=p, alt="main", sort_order=1, is_primary=True)
-
-    resp = client.get(reverse("products:detail", kwargs={"public_id": p.public_id, "slug": p.slug}))
-    assert resp.status_code == 200
-
-    assert resp.context["product"].id == p.id
-
-    images = list(resp.context["images"])
-    assert len(images) == 2
-
-    primary = resp.context["primary_image"]
-    assert primary is not None
-    assert primary.is_primary is True
-
-
-def test_product_detail_404_for_inactive_product(client):
-    """
-    Неактивный товар не должен открываться во витрине.
-    """
-    p = Product.objects.create(
-        name="Hidden Boots",
-        brand="Gucci",
-        price="10.00",
-        is_active=False,
-    )
-    resp = client.get(reverse("products:detail", kwargs={"public_id": p.public_id, "slug": p.slug}))
-    assert resp.status_code == 404
-
-
-
-
-
-
-
-
-
-
-def test_product_detail_200_for_active_product(client):
-    """
     Активный товар открывается.
     В контексте должны быть:
     - product
@@ -69,7 +18,6 @@ def test_product_detail_200_for_active_product(client):
     product = Product.objects.create(
         name="Boots",
         brand="Gucci",
-        price="120.00",
         is_active=True,
     )
 
@@ -109,7 +57,6 @@ def test_product_detail_404_for_inactive_product(client):
     product = Product.objects.create(
         name="Hidden",
         brand="Gucci",
-        price="99.00",
         is_active=False,
     )
 
@@ -129,7 +76,6 @@ def test_product_detail_primary_image_fallback_to_first_by_sort_order(client):
     product = Product.objects.create(
         name="Bag",
         brand="Prada",
-        price="300.00",
         is_active=True,
     )
 
@@ -166,28 +112,24 @@ def test_product_detail_related_products_same_brand_only(client):
     main = Product.objects.create(
         name="Main",
         brand="Dolce",
-        price="200.00",
         is_active=True,
     )
 
     related = Product.objects.create(
         name="Related",
         brand="Dolce",
-        price="180.00",
         is_active=True,
     )
 
     other_brand = Product.objects.create(
         name="Other",
         brand="Armani",
-        price="180.00",
         is_active=True,
     )
 
     inactive = Product.objects.create(
         name="Inactive",
         brand="Dolce",
-        price="150.00",
         is_active=False,
     )
 
@@ -209,7 +151,6 @@ def test_product_detail_redirects_on_wrong_slug(client):
     product = Product.objects.create(
         name="Silk Dress",
         brand="Gucci",
-        price="220.00",
         is_active=True,
     )
 
@@ -229,7 +170,6 @@ def test_product_detail_exposes_variant_selection_context(client):
     product = Product.objects.create(
         name="Variant Dress",
         brand="Gucci",
-        price="220.00",
         is_active=True,
     )
     v1 = ProductVariant.objects.create(
@@ -265,7 +205,6 @@ def test_product_detail_prefers_requested_active_variant_from_query(client):
     product = Product.objects.create(
         name="Variant Dress",
         brand="Gucci",
-        price="220.00",
         is_active=True,
     )
     default_variant = ProductVariant.objects.create(
@@ -301,7 +240,6 @@ def test_product_detail_ignores_invalid_variant_query_and_falls_back(client):
     product = Product.objects.create(
         name="Variant Dress",
         brand="Gucci",
-        price="220.00",
         is_active=True,
     )
     fallback_variant = ProductVariant.objects.create(
@@ -325,7 +263,6 @@ def test_product_detail_ignores_invalid_variant_query_and_falls_back(client):
     other_product = Product.objects.create(
         name="Other Dress",
         brand="Gucci",
-        price="210.00",
         is_active=True,
     )
     foreign_variant = ProductVariant.objects.create(
@@ -351,7 +288,6 @@ def test_product_detail_redirect_preserves_variant_query_on_wrong_slug(client):
     product = Product.objects.create(
         name="Silk Dress",
         brand="Gucci",
-        price="220.00",
         is_active=True,
     )
     variant = ProductVariant.objects.create(

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from django.core.paginator import Paginator
-from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
-from django.utils.http import urlencode
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_catalog_index, breadcrumbs_for_category
-from apps.products.models import Category, Product, ProductImage, ProductVariant
+from apps.products.models import Category, Product
+from apps.products.services.listing_service import paginate_request_queryset, with_product_card_related
+from apps.products.services.product_card_presenter import build_product_card_payload
 from apps.products.services.product_sorting_service import sort_products_queryset
 
 
@@ -20,71 +18,7 @@ def _catalog_roots_queryset():
 
 
 def _catalog_products_queryset():
-    return Product.objects.filter(is_active=True).prefetch_related(
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_listing",
-        ),
-        Prefetch(
-            "variants",
-            queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
-            to_attr="_prefetched_active_variants_for_pricing",
-        ),
-    )
-
-
-def _paginate_queryset(*, request, queryset, page_size: int):
-    paginator = Paginator(queryset, page_size)
-    page_obj = paginator.get_page(request.GET.get("page") or 1)
-
-    query_params = request.GET.copy()
-    query_params.pop("page", None)
-
-    return paginator, page_obj, query_params.urlencode()
-
-
-def build_product_card_payload(*, product, request, cta_mode=None):
-    cover = product.primary_image
-    image_url = ""
-    image_alt = product.name
-
-    if cover:
-        image_alt = cover.alt or product.name
-        if cover.image_card:
-            image_url = cover.image_card.url
-        elif cover.image_original:
-            image_url = cover.image_original.url
-        elif cover.image_url:
-            image_url = cover.image_url
-
-    default_variant = product.default_variant
-    compare_at = product.display_compare_at
-    price = product.display_price
-
-    detail_url = reverse(
-        "products:detail",
-        kwargs={"public_id": product.public_id, "slug": product.slug},
-    )
-    if default_variant:
-        detail_url = f"{detail_url}?{urlencode({'variant': str(default_variant.public_id)})}"
-
-    return {
-        "public_id": str(product.public_id),
-        "slug": product.slug,
-        "name": product.name,
-        "brand": product.brand or "Designer",
-        "detail_url": detail_url,
-        "image_url": image_url,
-        "image_alt": image_alt,
-        "price": price,
-        "compare_at": compare_at,
-        "has_sale": bool(compare_at),
-        "default_variant_public_id": str(default_variant.public_id) if default_variant else "",
-        "is_available": default_variant is not None,
-        "cta_mode": cta_mode or "",
-        "next_path": request.path,
-    }
+    return with_product_card_related(Product.objects.active())
 
 
 def build_catalog_index_context(*, request, page_size: int) -> dict:
@@ -93,7 +27,7 @@ def build_catalog_index_context(*, request, page_size: int) -> dict:
     qs = _catalog_products_queryset()
     qs, sort = sort_products_queryset(request=request, queryset=qs)
 
-    paginator, page_obj, pagination_query = _paginate_queryset(
+    paginator, page_obj, pagination_query = paginate_request_queryset(
         request=request,
         queryset=qs,
         page_size=page_size,
@@ -138,22 +72,11 @@ def build_catalog_category_context(*, request, slug: str, page_size: int) -> dic
         .order_by("sort_order", "name", "id")
     )
 
-    qs = Product.objects.in_category(active_category).prefetch_related(
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_listing",
-        ),
-        Prefetch(
-            "variants",
-            queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
-            to_attr="_prefetched_active_variants_for_pricing",
-        ),
-    )
+    qs = with_product_card_related(Product.objects.in_category(active_category))
 
     qs, sort = sort_products_queryset(request=request, queryset=qs)
 
-    paginator, page_obj, pagination_query = _paginate_queryset(
+    paginator, page_obj, pagination_query = paginate_request_queryset(
         request=request,
         queryset=qs,
         page_size=page_size,

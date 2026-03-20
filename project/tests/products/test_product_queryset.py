@@ -11,9 +11,9 @@ def test_product_queryset_in_category_returns_only_active_products_sorted():
     """
     cat = Category.objects.create(name="Shoes", is_active=True)
 
-    p_old = Product.objects.create(name="Old", brand="X", price="1.00", is_active=True)
-    p_new = Product.objects.create(name="New", brand="X", price="2.00", is_active=True)
-    p_inactive = Product.objects.create(name="Inactive", brand="X", price="3.00", is_active=False)
+    p_old = Product.objects.create(name="Old", brand="X", is_active=True)
+    p_new = Product.objects.create(name="New", brand="X", is_active=True)
+    p_inactive = Product.objects.create(name="Inactive", brand="X", is_active=False)
 
     ProductCategory.objects.create(product=p_old, category=cat)
     ProductCategory.objects.create(product=p_new, category=cat)

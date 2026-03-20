@@ -10,7 +10,7 @@ from .models import Cart, CartItem
 class CartMergeTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.product = Product.objects.create(name="Test Product", price="19.99")
+        self.product = Product.objects.create(name="Test Product")
         self.variant = ProductVariant.objects.create(
             product=self.product,
             size="M",
@@ -48,7 +48,7 @@ class CartMergeTests(TestCase):
 
 class CartItemTests(TestCase):
     def setUp(self):
-        self.product = Product.objects.create(name="Test Product", price="10.00")
+        self.product = Product.objects.create(name="Test Product")
         self.variant = ProductVariant.objects.create(
             product=self.product,
             size="L",
@@ -67,7 +67,7 @@ class CartItemTests(TestCase):
 class CartViewsTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.product = Product.objects.create(name="Test Product", price="9.99")
+        self.product = Product.objects.create(name="Test Product")
         self.variant = ProductVariant.objects.create(
             product=self.product,
             size="42",

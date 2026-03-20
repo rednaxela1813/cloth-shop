@@ -1,0 +1,9 @@
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+  {% for card in product_cards %}
+    {% include "csm/components/product_card.html" with card=card %}
+  {% empty %}
+    <div class="col-span-full rounded-2xl border border-zinc-200 p-10 text-center text-sm text-zinc-600">
+      {{ empty_message }}
+    </div>
+  {% endfor %}
+</div>

@@ -90,15 +90,6 @@ class Product(models.Model):
             models.Index(fields=["brand"]),
         ]
 
-    def __init__(self, *args, **kwargs):
-        """
-        Временная совместимость со старым кодом, где product-level pricing
-        ещё мог передаваться при инициализации модели.
-        """
-        kwargs.pop("price", None)
-        kwargs.pop("compare_at", None)
-        super().__init__(*args, **kwargs)
-
     def __str__(self) -> str:
         return self.name
 

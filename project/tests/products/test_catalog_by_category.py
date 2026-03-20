@@ -14,8 +14,8 @@ def test_catalog_200(client):
 def test_catalog_category_filters_products(client):
     cat = Category.objects.create(name="Shoes", is_active=True)
 
-    p1 = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
-    p2 = Product.objects.create(name="Bag", brand="Prada", price="20.00", is_active=True)
+    p1 = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
+    p2 = Product.objects.create(name="Bag", brand="Prada", is_active=True)
 
     ProductCategory.objects.create(product=p1, category=cat, is_primary=True)
 

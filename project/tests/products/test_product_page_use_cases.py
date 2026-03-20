@@ -11,11 +11,15 @@ def test_build_product_list_context_filters_active_and_sorts_by_price_asc():
     rf = RequestFactory()
     request = rf.get("/shop/?sort=price_asc&page=1")
 
-    low = Product.objects.create(name="Low", price="999.00", is_active=True)
-    high = Product.objects.create(name="High", price="1.00", is_active=True)
-    Product.objects.create(name="Inactive", price="1.00", is_active=False)
-    ProductVariant.objects.create(product=low, size="S", color="Black", sku="LOW-S-BLK", price="10.00", stock=2, is_active=True)
-    ProductVariant.objects.create(product=high, size="S", color="Black", sku="HIGH-S-BLK", price="20.00", stock=2, is_active=True)
+    low = Product.objects.create(name="Low", is_active=True)
+    high = Product.objects.create(name="High", is_active=True)
+    Product.objects.create(name="Inactive", is_active=False)
+    ProductVariant.objects.create(
+        product=low, size="S", color="Black", sku="LOW-S-BLK", price="10.00", stock=2, is_active=True
+    )
+    ProductVariant.objects.create(
+        product=high, size="S", color="Black", sku="HIGH-S-BLK", price="20.00", stock=2, is_active=True
+    )
 
     context = build_product_list_context(request=request, page_size=12)
 
@@ -25,7 +29,7 @@ def test_build_product_list_context_filters_active_and_sorts_by_price_asc():
 
 def test_build_product_detail_result_returns_redirect_for_wrong_slug():
     rf = RequestFactory()
-    product = Product.objects.create(name="Silk Dress", price="100.00", is_active=True)
+    product = Product.objects.create(name="Silk Dress", is_active=True)
     request = rf.get(f"/shop/{product.public_id}/wrong-slug/")
 
     result = build_product_detail_result(request=request, public_id=product.public_id, slug="wrong-slug")
@@ -37,7 +41,7 @@ def test_build_product_detail_result_returns_redirect_for_wrong_slug():
 
 def test_build_product_detail_result_builds_context_with_primary_and_variant_selection():
     rf = RequestFactory()
-    product = Product.objects.create(name="Variant Dress", brand="Gucci", price="220.00", is_active=True)
+    product = Product.objects.create(name="Variant Dress", brand="Gucci", is_active=True)
     ProductImage.objects.create(product=product, alt="secondary", sort_order=2, is_primary=False)
     primary = ProductImage.objects.create(product=product, alt="primary", sort_order=1, is_primary=True)
 

@@ -7,7 +7,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_build_active_variants_payload_selects_lowest_priced_in_stock_variant():
-    product = Product.objects.create(name="Variant Tee", price="100.00", is_active=True)
+    product = Product.objects.create(name="Variant Tee", is_active=True)
     cheaper_out_of_stock = ProductVariant.objects.create(
         product=product,
         size="S",
@@ -36,7 +36,7 @@ def test_build_active_variants_payload_selects_lowest_priced_in_stock_variant():
 
 
 def test_build_active_variants_payload_returns_none_when_no_active_variants():
-    product = Product.objects.create(name="No Variant Item", price="50.00", is_active=True)
+    product = Product.objects.create(name="No Variant Item", is_active=True)
     ProductVariant.objects.create(
         product=product,
         size="L",

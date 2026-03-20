@@ -5,15 +5,15 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from datetime import timedelta
 
-from django.core.paginator import Paginator
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from apps.catalog.breadcrumbs import breadcrumbs_for_product
-from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.products.models import Product, ProductCategory, ProductImage, ProductVariant
+from apps.products.services.listing_service import paginate_request_queryset, with_product_card_related
+from apps.products.services.product_card_presenter import build_product_card_payload
 from apps.products.services.product_sorting_service import sort_products_queryset, with_sort_price
 from apps.products.services.product_variant_presenter import (
     build_active_variants_payload,
@@ -46,18 +46,7 @@ def _read_decimal(raw_value: str) -> Decimal | None:
 
 
 def build_product_list_context(*, request, page_size: int) -> dict:
-    qs = Product.objects.filter(is_active=True).prefetch_related(
-        Prefetch(
-            "images",
-            queryset=ProductImage.objects.order_by("sort_order", "id"),
-            to_attr="_prefetched_images_for_listing",
-        ),
-        Prefetch(
-            "variants",
-            queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
-            to_attr="_prefetched_active_variants_for_pricing",
-        ),
-    )
+    qs = with_product_card_related(Product.objects.active())
     qs = with_sort_price(qs)
 
     query = (request.GET.get("q") or "").strip()
@@ -91,11 +80,11 @@ def build_product_list_context(*, request, page_size: int) -> dict:
 
     qs, _sort = sort_products_queryset(request=request, queryset=qs)
 
-    paginator = Paginator(qs, page_size)
-    page_number = request.GET.get("page") or 1
-    page_obj = paginator.get_page(page_number)
-    query_params = request.GET.copy()
-    query_params.pop("page", None)
+    paginator, page_obj, pagination_query = paginate_request_queryset(
+        request=request,
+        queryset=qs,
+        page_size=page_size,
+    )
     product_cards = [
         build_product_card_payload(product=product, request=request)
         for product in page_obj.object_list
@@ -118,7 +107,7 @@ def build_product_list_context(*, request, page_size: int) -> dict:
         "selected_max_price": request.GET.get("max_price", ""),
         "in_stock_only": in_stock_only,
         "new_only": new_only,
-        "pagination_query": query_params.urlencode(),
+        "pagination_query": pagination_query,
     }
 
 
@@ -170,21 +159,12 @@ def build_product_detail_result(*, request, public_id, slug: str) -> ProductDeta
             og_image_url = request.build_absolute_uri(primary_image.image_original.url)
 
     related_products = (
-        Product.objects.filter(is_active=True, brand=product.brand)
-        .exclude(id=product.id)
-        .prefetch_related(
-            Prefetch(
-                "variants",
-                queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
-                to_attr="_prefetched_active_variants_for_pricing",
-            ),
-            Prefetch(
-                "images",
-                queryset=ProductImage.objects.order_by("sort_order", "id"),
-                to_attr="_prefetched_images_for_primary",
-            ),
-        )
-        .order_by("-created", "id")[:8]
+        with_product_card_related(
+            Product.objects.active()
+            .filter(brand=product.brand)
+            .exclude(id=product.id)
+            .order_by("-created", "id")
+        )[:8]
         if product.brand
         else Product.objects.none()
     )

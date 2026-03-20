@@ -18,7 +18,7 @@ def test_sitemap_200(client):
 
 
 def test_sitemap_includes_product_detail(client):
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
     resp = client.get(reverse("sitemap"))
     xml = resp.content.decode("utf-8")
     # должен быть url на detail
@@ -27,7 +27,7 @@ def test_sitemap_includes_product_detail(client):
 
 
 def test_sitemap_excludes_inactive_products(client):
-    p = Product.objects.create(name="Hidden", brand="X", price="10.00", is_active=False)
+    p = Product.objects.create(name="Hidden", brand="X", is_active=False)
     resp = client.get(reverse("sitemap"))
     xml = resp.content.decode("utf-8")
 

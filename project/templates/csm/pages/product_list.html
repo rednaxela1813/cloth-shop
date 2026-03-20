@@ -36,15 +36,7 @@
     </aside>
 
     <div class="lg:col-span-9">
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
-        {% for card in product_cards %}
-          {% include "csm/components/product_card.html" with card=card %}
-        {% empty %}
-          <div class="col-span-full rounded-2xl border border-zinc-200 p-10 text-center text-sm text-zinc-600">
-            Nič sme nenašli. Skúste zmeniť filtre.
-          </div>
-        {% endfor %}
-      </div>
+      {% include "csm/components/product_grid.html" with empty_message="Nič sme nenašli. Skúste zmeniť filtre." %}
 
       <div class="mt-10">
         {% include "csm/includes/pagination.html" with page_obj=page_obj %}

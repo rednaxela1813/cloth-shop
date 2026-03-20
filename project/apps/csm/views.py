@@ -1,16 +1,16 @@
 # project/apps/csm/views.py
 from datetime import timedelta
 
-from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 
-from apps.catalog.use_cases.catalog_pages import build_product_card_payload
 from apps.csm.models import HomeHeroContent
 from apps.customer_comm.application.use_cases import submit_inquiry
 from apps.customer_comm.presentation.forms import PublicInquiryForm
-from apps.products.models import Category, Product, ProductImage, ProductVariant
+from apps.products.models import Category, Product
+from apps.products.services.listing_service import with_product_card_related
+from apps.products.services.product_card_presenter import build_product_card_payload
 from apps.shipping.services import get_return_window_days
 
 NEW_ARRIVALS_DAYS = 14
@@ -61,21 +61,7 @@ def home_view(request):
     elif selected_category:
         trending_qs = trending_qs.filter(categories=selected_category)
 
-    trending_products = (
-        trending_qs.distinct()
-        .prefetch_related(
-            Prefetch(
-                "images",
-                queryset=ProductImage.objects.order_by("sort_order", "id"),
-                to_attr="_prefetched_images_for_listing",
-            ),
-            Prefetch(
-                "variants",
-                queryset=ProductVariant.objects.filter(is_active=True).order_by("price", "id"),
-                to_attr="_prefetched_active_variants_for_pricing",
-            ),
-        )[:8]
-    )
+    trending_products = with_product_card_related(trending_qs.distinct())[:8]
     trending_product_cards = [
         build_product_card_payload(product=product, request=request, cta_mode="details")
         for product in trending_products

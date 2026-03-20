@@ -22,7 +22,7 @@ class _DummyStripeSession:
 
 
 def _make_order(user=None):
-    product = Product.objects.create(name="Stripe Product", price="10.00")
+    product = Product.objects.create(name="Stripe Product")
     ProductVariant.objects.create(
         product=product,
         size="M",
@@ -50,7 +50,7 @@ def _make_order(user=None):
 
 
 def _make_reserved_order_with_item(*, stock_before_reservation=5, quantity=2):
-    product = Product.objects.create(name="Stripe Reserved Product", price="10.00")
+    product = Product.objects.create(name="Stripe Reserved Product")
     variant = ProductVariant.objects.create(
         product=product,
         size="L",

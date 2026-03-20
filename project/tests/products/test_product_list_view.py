@@ -14,8 +14,8 @@ def test_product_list_returns_page_obj_and_only_active(client):
     - отдавать page_obj
     - включать только активные товары
     """
-    p1 = Product.objects.create(name="A", brand="X", price="10.00", is_active=True)
-    Product.objects.create(name="B", brand="X", price="20.00", is_active=False)
+    p1 = Product.objects.create(name="A", brand="X", is_active=True)
+    Product.objects.create(name="B", brand="X", is_active=False)
 
     resp = client.get(reverse("products:list"))
     assert resp.status_code == 200
@@ -29,10 +29,14 @@ def test_product_list_sort_price_asc(client):
     """
     sort=price_asc сортирует по возрастанию цены.
     """
-    p_low = Product.objects.create(name="Low", brand="X", price="999.00", is_active=True)
-    p_high = Product.objects.create(name="High", brand="X", price="1.00", is_active=True)
-    ProductVariant.objects.create(product=p_low, size="M", color="Black", sku="LOW-M-BLK-LV", price="10.00", stock=2, is_active=True)
-    ProductVariant.objects.create(product=p_high, size="M", color="Black", sku="HIGH-M-BLK-LV", price="20.00", stock=2, is_active=True)
+    p_low = Product.objects.create(name="Low", brand="X", is_active=True)
+    p_high = Product.objects.create(name="High", brand="X", is_active=True)
+    ProductVariant.objects.create(
+        product=p_low, size="M", color="Black", sku="LOW-M-BLK-LV", price="10.00", stock=2, is_active=True
+    )
+    ProductVariant.objects.create(
+        product=p_high, size="M", color="Black", sku="HIGH-M-BLK-LV", price="20.00", stock=2, is_active=True
+    )
 
     resp = client.get(reverse("products:list") + "?sort=price_asc")
     page_obj = resp.context["page_obj"]
@@ -44,7 +48,7 @@ def test_product_list_paginates(client):
     Пагинация: если товаров больше чем page_size, page_obj должен резать список.
     """
     for i in range(13):
-        Product.objects.create(name=f"P{i}", brand="X", price="10.00", is_active=True)
+        Product.objects.create(name=f"P{i}", brand="X", is_active=True)
 
     resp = client.get(reverse("products:list"))
     page_obj = resp.context["page_obj"]
@@ -54,8 +58,8 @@ def test_product_list_paginates(client):
 
 
 def test_product_list_filter_by_brand(client):
-    target = Product.objects.create(name="A", brand="Gucci", price="10.00", is_active=True)
-    Product.objects.create(name="B", brand="Prada", price="10.00", is_active=True)
+    target = Product.objects.create(name="A", brand="Gucci", is_active=True)
+    Product.objects.create(name="B", brand="Prada", is_active=True)
 
     resp = client.get(reverse("products:list"), {"brand": "Gucci"})
 
@@ -64,9 +68,9 @@ def test_product_list_filter_by_brand(client):
 
 
 def test_product_list_filter_by_query_matches_name_or_brand(client):
-    by_name = Product.objects.create(name="Leather Boots", brand="X", price="10.00", is_active=True)
-    by_brand = Product.objects.create(name="Classic Coat", brand="Gucci", price="10.00", is_active=True)
-    Product.objects.create(name="Sneakers", brand="Prada", price="10.00", is_active=True)
+    by_name = Product.objects.create(name="Leather Boots", brand="X", is_active=True)
+    by_brand = Product.objects.create(name="Classic Coat", brand="Gucci", is_active=True)
+    Product.objects.create(name="Sneakers", brand="Prada", is_active=True)
 
     by_name_resp = client.get(reverse("products:list"), {"q": "boots"})
     assert by_name_resp.status_code == 200
@@ -78,8 +82,8 @@ def test_product_list_filter_by_query_matches_name_or_brand(client):
 
 
 def test_product_list_filter_by_price_range_uses_variant_display_price(client):
-    in_range = Product.objects.create(name="In range", brand="X", price="999.00", is_active=True)
-    out_of_range = Product.objects.create(name="Out range", brand="X", price="1.00", is_active=True)
+    in_range = Product.objects.create(name="In range", brand="X", is_active=True)
+    out_of_range = Product.objects.create(name="Out range", brand="X", is_active=True)
     ProductVariant.objects.create(
         product=in_range,
         size="M",
@@ -135,8 +139,8 @@ def test_product_list_price_filter_keeps_products_without_active_variant_price(c
 
 
 def test_product_list_filter_in_stock_only(client):
-    in_stock = Product.objects.create(name="Stock", brand="X", price="10.00", is_active=True)
-    out_of_stock = Product.objects.create(name="No stock", brand="X", price="10.00", is_active=True)
+    in_stock = Product.objects.create(name="Stock", brand="X", is_active=True)
+    out_of_stock = Product.objects.create(name="No stock", brand="X", is_active=True)
     ProductVariant.objects.create(
         product=in_stock,
         size="M",
@@ -163,8 +167,8 @@ def test_product_list_filter_in_stock_only(client):
 
 
 def test_product_list_filter_new_only_uses_product_created_date(client):
-    recent = Product.objects.create(name="Recent", brand="X", price="10.00", is_active=True)
-    old = Product.objects.create(name="Old", brand="X", price="10.00", is_active=True)
+    recent = Product.objects.create(name="Recent", brand="X", is_active=True)
+    old = Product.objects.create(name="Old", brand="X", is_active=True)
     Product.objects.filter(pk=recent.pk).update(created=timezone.now() - timedelta(days=5))
     Product.objects.filter(pk=old.pk).update(created=timezone.now() - timedelta(days=20))
 
@@ -176,7 +180,7 @@ def test_product_list_filter_new_only_uses_product_created_date(client):
 
 
 def test_product_list_cards_link_to_product_detail_instead_of_posting_to_cart(client):
-    product = Product.objects.create(name="Coat", brand="Gucci", price="10.00", is_active=True)
+    product = Product.objects.create(name="Coat", brand="Gucci", is_active=True)
     variant = ProductVariant.objects.create(
         product=product,
         size="M",
@@ -196,7 +200,7 @@ def test_product_list_cards_link_to_product_detail_instead_of_posting_to_cart(cl
 
 
 def test_product_list_cards_link_to_product_detail_with_default_variant_query(client):
-    product = Product.objects.create(name="Coat", brand="Gucci", price="10.00", is_active=True)
+    product = Product.objects.create(name="Coat", brand="Gucci", is_active=True)
     variant = ProductVariant.objects.create(
         product=product,
         size="M",

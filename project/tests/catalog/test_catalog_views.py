@@ -18,8 +18,8 @@ def test_catalog_list_shows_only_active_root_categories(client):
     # не корень
     Category.objects.create(name="Shoes", parent=root1, is_active=True)
 
-    p1 = Product.objects.create(name="Boots", brand="X", price="10.00", is_active=True)
-    p2 = Product.objects.create(name="Coat", brand="X", price="20.00", is_active=True)
+    p1 = Product.objects.create(name="Boots", brand="X", is_active=True)
+    p2 = Product.objects.create(name="Coat", brand="X", is_active=True)
     ProductCategory.objects.create(product=p1, category=root1, is_primary=True)
     ProductCategory.objects.create(product=p2, category=root2, is_primary=True)
 
@@ -47,8 +47,8 @@ def test_catalog_category_detail_shows_only_active_products_in_category(client):
     """
     cat = Category.objects.create(name="Shoes", is_active=True)
 
-    active_p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
-    inactive_p = Product.objects.create(name="Old Boots", brand="Gucci", price="5.00", is_active=False)
+    active_p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
+    inactive_p = Product.objects.create(name="Old Boots", brand="Gucci", is_active=False)
 
     ProductCategory.objects.create(product=active_p, category=cat, is_primary=True)
     ProductCategory.objects.create(product=inactive_p, category=cat, is_primary=True)
@@ -63,7 +63,7 @@ def test_catalog_category_detail_shows_only_active_products_in_category(client):
 def test_catalog_category_detail_includes_products_from_active_subcategories(client):
     root = Category.objects.create(name="Women", is_active=True)
     child = Category.objects.create(name="Dresses", parent=root, is_active=True)
-    product = Product.objects.create(name="Silk Dress", brand="Prada", price="10.00", is_active=True)
+    product = Product.objects.create(name="Silk Dress", brand="Prada", is_active=True)
 
     ProductCategory.objects.create(product=product, category=child, is_primary=True)
 
@@ -76,7 +76,7 @@ def test_catalog_category_detail_includes_products_from_active_subcategories(cli
 
 def test_catalog_category_detail_cards_link_to_product_detail(client):
     cat = Category.objects.create(name="Shoes", is_active=True)
-    product = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    product = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
     ProductCategory.objects.create(product=product, category=cat, is_primary=True)
 
     resp = client.get(reverse("catalog:category", kwargs={"slug": cat.slug}))

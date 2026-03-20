@@ -12,11 +12,15 @@ def test_build_catalog_index_context_applies_sort_and_pagination():
     rf = RequestFactory()
     request = rf.get("/catalog/?sort=price_asc&page=1")
 
-    low = Product.objects.create(name="Low", price="999.00", is_active=True)
-    high = Product.objects.create(name="High", price="1.00", is_active=True)
-    Product.objects.create(name="Hidden", price="1.00", is_active=False)
-    ProductVariant.objects.create(product=low, size="L", color="Black", sku="CAT-LOW-L-BLK", price="10.00", stock=1, is_active=True)
-    ProductVariant.objects.create(product=high, size="L", color="Black", sku="CAT-HIGH-L-BLK", price="20.00", stock=1, is_active=True)
+    low = Product.objects.create(name="Low", is_active=True)
+    high = Product.objects.create(name="High", is_active=True)
+    Product.objects.create(name="Hidden", is_active=False)
+    ProductVariant.objects.create(
+        product=low, size="L", color="Black", sku="CAT-LOW-L-BLK", price="10.00", stock=1, is_active=True
+    )
+    ProductVariant.objects.create(
+        product=high, size="L", color="Black", sku="CAT-HIGH-L-BLK", price="20.00", stock=1, is_active=True
+    )
 
     context = build_catalog_index_context(request=request, page_size=12)
 
@@ -31,9 +35,9 @@ def test_build_catalog_category_context_returns_active_category_products_and_sub
     active_child = Category.objects.create(name="Boots", parent=parent, is_active=True)
     Category.objects.create(name="Archive", parent=parent, is_active=False)
 
-    active_product = Product.objects.create(name="Boot A", price="10.00", is_active=True)
-    inactive_product = Product.objects.create(name="Boot B", price="20.00", is_active=False)
-    child_product = Product.objects.create(name="Boot Child", price="15.00", is_active=True)
+    active_product = Product.objects.create(name="Boot A", is_active=True)
+    inactive_product = Product.objects.create(name="Boot B", is_active=False)
+    child_product = Product.objects.create(name="Boot Child", is_active=True)
     ProductCategory.objects.create(product=active_product, category=parent, is_primary=True)
     ProductCategory.objects.create(product=inactive_product, category=parent, is_primary=True)
     ProductCategory.objects.create(product=child_product, category=active_child, is_primary=True)

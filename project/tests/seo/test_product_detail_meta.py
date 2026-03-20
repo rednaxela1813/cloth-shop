@@ -6,7 +6,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_product_detail_has_canonical_meta_and_og(client):
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
     url = reverse("products:detail", kwargs={"public_id": p.public_id, "slug": p.slug})
 
     resp = client.get(url)
@@ -29,7 +29,7 @@ def test_product_detail_has_canonical_meta_and_og(client):
 
 
 def test_product_detail_has_json_ld_product(client):
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True)
     ProductVariant.objects.create(
         product=p,
         size="42",

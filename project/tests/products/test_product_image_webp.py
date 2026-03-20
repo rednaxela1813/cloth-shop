@@ -25,7 +25,7 @@ def test_productimage_converts_original_to_webp_and_creates_card_and_thumb_and_d
     # cleanup in case of reruns
     os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 
-    p = Product.objects.create(name="Boots", brand="Gucci", price="10.00", is_active=True, is_trending=True)
+    p = Product.objects.create(name="Boots", brand="Gucci", is_active=True, is_trending=True)
 
     original_bytes = _make_test_image_bytes("JPEG")
     upload = SimpleUploadedFile("original.jpeg", original_bytes, content_type="image/jpeg")
@@ -65,7 +65,7 @@ def test_productimage_does_not_reconvert_if_original_is_already_webp_but_still_g
 
     os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 
-    p = Product.objects.create(name="Bag", brand="Prada", price="20.00", is_active=True)
+    p = Product.objects.create(name="Bag", brand="Prada", is_active=True)
 
     webp_bytes = _make_test_image_bytes("WEBP")
     upload = SimpleUploadedFile("already.webp", webp_bytes, content_type="image/webp")
