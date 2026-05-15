@@ -1,14 +1,12 @@
-                   
 services:
   web:
     build:
       context: .
     command: >
-      sh -c "python manage.py collectstatic --noinput &&
       gunicorn ital.wsgi:application
       --bind 0.0.0.0:8000
       --workers 3
-      --timeout 60"
+      --timeout 60
     environment:
       DJANGO_SETTINGS_MODULE: ital.settings.prod
     env_file:
@@ -28,35 +26,54 @@ services:
       retries: 5
       start_period: 40s
 
+  release:
+    build:
+      context: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput"
+    profiles: ["release"]
+    environment:
+      DJANGO_SETTINGS_MODULE: ital.settings.prod
+    env_file:
+      - /srv/ricotti/env/.env.staging
+    volumes:
+      - /srv/ricotti/media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
   celery_worker:
     build:
       context: .
     environment:
-      DJANGO_SETTINGS_MODULE: ital.settings.dev
+      DJANGO_SETTINGS_MODULE: ital.settings.prod
     env_file:
       - /srv/ricotti/env/.env.staging
     command: celery -A ital worker -l info
     volumes:
-      - /srv/ricotti/app:/app
       - /srv/ricotti/media:/app/media
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   celery_beat:
     build:
       context: .
     environment:
-      DJANGO_SETTINGS_MODULE: ital.settings.dev
+      DJANGO_SETTINGS_MODULE: ital.settings.prod
     env_file:
       - /srv/ricotti/env/.env.staging
     command: celery -A ital beat -l info
     volumes:
-      - .:/app
-      - ./media:/app/media
+      - /srv/ricotti/media:/app/media
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   redis:
     image: redis:7-alpine
@@ -75,6 +92,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
-
-

@@ -40,6 +40,11 @@ def _csv(name: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def _add_warning(warnings: list[str], message: str) -> None:
+    if message not in warnings:
+        warnings.append(message)
+
+
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -50,7 +55,7 @@ def main() -> int:
 
     for name in OPTIONAL_BUT_RECOMMENDED:
         if not os.getenv(name, "").strip():
-            warnings.append(f"{name} is empty")
+            _add_warning(warnings, f"{name} is empty")
 
     debug = _as_bool("DEBUG", default=False)
     if debug:
@@ -60,21 +65,21 @@ def main() -> int:
     if not allowed_hosts:
         errors.append("ALLOWED_HOSTS must not be empty")
     if any(host in {"localhost", "127.0.0.1"} for host in allowed_hosts):
-        warnings.append("ALLOWED_HOSTS still contains localhost/127.0.0.1")
+        _add_warning(warnings, "ALLOWED_HOSTS still contains localhost/127.0.0.1")
 
     trusted_origins = _csv("CSRF_TRUSTED_ORIGINS")
     if not trusted_origins:
-        warnings.append("CSRF_TRUSTED_ORIGINS is empty")
+        _add_warning(warnings, "CSRF_TRUSTED_ORIGINS is empty")
     for origin in trusted_origins:
         if not (origin.startswith("https://") or origin.startswith("http://")):
             errors.append(f"CSRF_TRUSTED_ORIGINS entry must start with http:// or https://: {origin}")
 
     if not _as_bool("SECURE_SSL_REDIRECT", default=True):
-        warnings.append("SECURE_SSL_REDIRECT is False")
+        _add_warning(warnings, "SECURE_SSL_REDIRECT is False")
     if not _as_bool("SESSION_COOKIE_SECURE", default=True):
-        warnings.append("SESSION_COOKIE_SECURE is False")
+        _add_warning(warnings, "SESSION_COOKIE_SECURE is False")
     if not _as_bool("CSRF_COOKIE_SECURE", default=True):
-        warnings.append("CSRF_COOKIE_SECURE is False")
+        _add_warning(warnings, "CSRF_COOKIE_SECURE is False")
 
     print("==> Prod env validation")
     for warning in warnings:

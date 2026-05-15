@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.seo.models import SeoMeta
 from .models import Category, Product, ProductCategory, ProductImage, ProductVariant, VariantImage
 
+LOW_STOCK_THRESHOLD = 3
+
 
 class AdminImagePreviewMixin:
     preview_width = 120
@@ -100,6 +102,28 @@ class VariantImageInline(admin.TabularInline):
     @admin.display(description=_("Náhľad miniatúry"))
     def image_thumb_preview(self, obj):
         return AdminImagePreviewMixin()._render_image_preview(obj.image_thumb)
+
+
+class StockLevelFilter(admin.SimpleListFilter):
+    title = _("Sklad")
+    parameter_name = "stock_level"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("out", _("Vypredané")),
+            ("low", _("Nízky stav")),
+            ("available", _("Na sklade")),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "out":
+            return queryset.filter(stock=0)
+        if value == "low":
+            return queryset.filter(stock__gt=0, stock__lte=LOW_STOCK_THRESHOLD)
+        if value == "available":
+            return queryset.filter(stock__gt=LOW_STOCK_THRESHOLD)
+        return queryset
 
 
 class SeoMetaFormMixin:
@@ -299,11 +323,19 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 @admin.register(ProductVariant)
 class ProductVariantAdmin(admin.ModelAdmin):
-    list_display = ("product", "size", "color", "sku", "price", "stock", "is_active")
-    list_filter = ("is_active", "color", "size")
+    list_display = ("product", "size", "color", "sku", "price", "stock", "stock_status", "is_active")
+    list_filter = (StockLevelFilter, "is_active", "color", "size")
     search_fields = ("product__name", "sku")
     inlines = [VariantImageInline]
     list_select_related = ("product",)
+
+    @admin.display(description=_("Stav skladu"))
+    def stock_status(self, obj):
+        if obj.stock <= 0:
+            return _("Vypredané")
+        if obj.stock <= LOW_STOCK_THRESHOLD:
+            return _("Nízky stav")
+        return _("Na sklade")
 
     def has_delete_permission(self, request, obj=None):
         return False

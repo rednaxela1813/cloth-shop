@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ital.settings.dev")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ital.settings.prod")
 try:
     from celery import Celery
 except ImportError:  # pragma: no cover - compatibility for local envs without celery installed

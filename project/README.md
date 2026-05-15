@@ -32,12 +32,15 @@ docker compose up --build
 - Prod-like run:
 ```bash
 cd project
-docker compose -f docker-compose.prod.yml up --build
+docker compose -f docker-compose.prod.yml up -d --build db redis
+docker compose -f docker-compose.prod.yml run --rm release
+docker compose -f docker-compose.prod.yml up -d web celery_worker celery_beat
 ```
 
 `Dockerfile` defaults to production runtime (`gunicorn`), while `docker-compose.yml` overrides command/settings for dev workflow.
 Production build now also runs `scripts/build_tailwind.sh`, so VPS runtime uses a freshly generated Tailwind bundle and does not depend on a local dev watcher.
-`docker-compose.prod.yml` now separates release tasks from runtime: `web` starts only `gunicorn`, and one-off deploy steps run through the `release` service.
+`docker-compose.prod.yml` and `docker-compose.staging.yml` separate release tasks from runtime: `web` starts only `gunicorn`, and one-off deploy steps run through the `release` service.
+`docker-compose.staging.yml` is VPS-specific and expects `/srv/ricotti/env/.env.staging`, `/srv/ricotti/media`, and `/srv/ricotti/postgres`; use `deploy_staging.sh` for that flow.
 
 ## Go-Live Runbook
 
@@ -50,7 +53,7 @@ You can start from [`deploy/env.prod.template`](./deploy/env.prod.template).
 
 ```bash
 cd project
-docker compose -f docker-compose.prod.yml up -d --build db
+docker compose -f docker-compose.prod.yml up -d --build db redis
 ```
 
 ### 2) Run release step (migrations + collectstatic)
@@ -64,7 +67,7 @@ docker compose -f docker-compose.prod.yml run --rm release
 
 ```bash
 cd project
-docker compose -f docker-compose.prod.yml up -d web
+docker compose -f docker-compose.prod.yml up -d web celery_worker celery_beat
 ```
 
 ### 4) Run release preflight

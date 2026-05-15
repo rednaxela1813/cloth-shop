@@ -18,17 +18,14 @@ git clean -fd
 echo ">>> Stop old containers"
 docker compose -f "$COMPOSE_FILE" down --remove-orphans
 
-echo ">>> Build and start containers"
-docker compose -f "$COMPOSE_FILE" up -d --build
+echo ">>> Build and start backing services"
+docker compose -f "$COMPOSE_FILE" up -d --build db redis
 
-echo ">>> Wait for DB"
-sleep 8
+echo ">>> Run release tasks"
+docker compose -f "$COMPOSE_FILE" run --rm release
 
-echo ">>> Run migrations"
-docker compose -f "$COMPOSE_FILE" exec -T web python manage.py migrate
-
-echo ">>> Collect static"
-docker compose -f "$COMPOSE_FILE" exec -T web python manage.py collectstatic --noinput
+echo ">>> Start application containers"
+docker compose -f "$COMPOSE_FILE" up -d --build web celery_worker celery_beat
 
 echo ">>> Health check"
 curl -fsS http://127.0.0.1:8000/healthz >/dev/null
